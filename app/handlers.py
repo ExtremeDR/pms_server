@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-import config
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request, jsonify
+import app.config as config
+from werkzeug.security import generate_password_hash
 from sqlalchemy import select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from db_second import *
+from app.db_second import *
 from datetime import datetime, timedelta
 
 
@@ -231,7 +231,6 @@ def _create_tag(secret_code):
     description = data.get("description") # int
     tag_name = data.get("tag_name")
 
-    # Создаем тег
     new_tag = Tags(
         description=description,
         tag_name=tag_name
@@ -240,7 +239,7 @@ def _create_tag(secret_code):
         db.session.add(new_tag)
         db.session.commit()
     except:
-        return jsonify({'success': False, 'code': 2000}) # Error добавить
+        return jsonify({'success': False, 'code': 2000})
     return jsonify({'success': True, 'code': 1001})
 
 def _create_task_from_other_task(secret_code):
