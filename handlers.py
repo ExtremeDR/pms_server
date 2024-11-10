@@ -231,7 +231,6 @@ def _create_tag(secret_code):
     description = data.get("description") # int
     tag_name = data.get("tag_name")
 
-    # Создаем тег
     new_tag = Tags(
         description=description,
         tag_name=tag_name
@@ -240,7 +239,7 @@ def _create_tag(secret_code):
         db.session.add(new_tag)
         db.session.commit()
     except:
-        return jsonify({'success': False, 'code': 2000}) # Error добавить
+        return jsonify({'success': False, 'code': 2000})
     return jsonify({'success': True, 'code': 1001})
 
 def _create_task_from_other_task(secret_code):
