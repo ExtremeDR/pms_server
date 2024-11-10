@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 import app.config as config
-from config import Config
+from .config import Config
 from sqlalchemy import select
 #from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import init_db,  db
