@@ -1,17 +1,14 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-import config
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template
+import app.config as config
+from config import Config
 from sqlalchemy import select
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from db_second import init_db, Users_tg, Users, TMP_code,Projects,Sprints,Tasks,Tags,  db
+from app.db_second import init_db,  db
+import app.handlers as hdl
 
-import handlers as hdl
-
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    #app.config['SQLALCHEMY_DATABASE_URI'] = config.DB_URL
-    app.config['SQLALCHEMY_DATABASE_URI'] = config.DB_URL_ANOTHER
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config.from_object(config_class)
     db.init_app(app) 
 
 
@@ -96,7 +93,7 @@ def create_app():
         return hdl._delete_user_from_project(secret_code)
     return app
 
-if __name__ == '__main__':
-    app = create_app() 
-    #app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+# if __name__ == '__main__':
+#     app = create_app() 
+#     #app.run(debug=True)
+#     app.run(host="0.0.0.0", port=5000, debug=True)

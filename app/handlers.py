@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-import config
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request, jsonify
+import app.config as config
+from werkzeug.security import generate_password_hash
 from sqlalchemy import select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from db_second import *
+from app.db_second import *
 from datetime import datetime, timedelta
 
 

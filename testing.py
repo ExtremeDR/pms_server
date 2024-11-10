@@ -1,5 +1,5 @@
 import requests
-import config
+import app.config as config
 data = {
     "tg_id" : "12345678",
     "uniqueCode" : "234",
