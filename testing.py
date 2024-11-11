@@ -6,20 +6,20 @@ data = {
 }
 
 data2 ={
-    "user_id" : "1",
-    "uniqueCode" : "456",
+    "user_id" : "2",
+    "uniqueCode" : "qwert",
 }
 
 data3 = {
-    "login" : "Dimka",
-    "pass" : "13523r",
-    "email" : "srtv4tvs@gmail.com",
+    "login" : "login123",
+    "pass" : "password123",
+    "email" : "aboba@gmail.com",
 }
 # Artemka pass = 23vrcxw4rs
 # Dimka pass = 13523r
 data4 = {
-    "login" : "Artemka",
-    "password" : "23vrcxw4rs",
+    "login" : "login123",
+    "password" : "password123",
 }
 
 data5 = {
@@ -40,19 +40,11 @@ data7 = {
 tasks_by_sprint_id = {
     "sprint_id" : 1,
 }
-r = requests.get(f"{config.base_url}/projects_by_head_id/{config.code_for_API}", json=data7)
+#r = requests.get(f"{config.base_url}/projects_by_head_id/{config.code_for_API}", json=data7)
 #print(r.json())
-data = r.json()
-project_ids = [project["id"] for project in data["data"]]
-first_project_id = project_ids[0] if project_ids else None
-data8 = {
-    "project_id" : first_project_id,
-    "sprint_duration" : 7,
-}
-data10 ={
-    "user_id": 2,
-    "project_id":first_project_id,
-}
+#data = r.json()
+#project_ids = [project["id"] for project in data["data"]]
+#first_project_id = project_ids[0] if project_ids else None
 data9 = {
     "sprint_id" : 1,
     "user_id" : 2,
@@ -63,19 +55,22 @@ data9 = {
 }
 #response = requests.post(f"{config.base_url}/create_task/{config.code_for_API}", json=data9)
 #response = requests.get(f"{config.base_url}/tasks_by_sprint_id/{config.code_for_API}", json=tasks_by_sprint_id)
-response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
+#response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
 #response = requests.post(f"{config.base_url}/create_sprint/{config.code_for_API}", json=data8)
 #print(response.json())
 #response = requests.post(f"{config.base_url}/create_project/{config.code_for_API}", json=data6)
-#response = requests.get(f"{config.base_url}/generate-code", json=data2)
-#response = requests.get(f"{config.base_url}/is-user-exists", json=data4)
+#response = requests.get(f"{config.base_url}/generate-code/{config.code_for_API}", json=data2)
+response = requests.post(f"{config.base_url}/is-user-exists/{config.code_for_API}", json=data4)
 #response = requests.post(f"{config.base_url}/add-user/{config.code_for_API}", json=data3)
 #response = requests.post(f"{config.base_url}/create_tag/{config.code_for_API}", json=data5)
 #print(response.json())
 #response = requests.post(f"{config.base_url}/add-tg-user", json=data)
 
-
+data11 = {
+    'tg_id':755525413
+}
 #response = requests.post(f"{config.base_url}/check_telegram_id", json={"telegramID": 123456782})
+#response = requests.get(f"{config.base_url}/all_projects_by_tg_id/{config.code_for_API}", json=data11)
 # deleting = {
 #     "user_id" : 1,
 #     "user_to_delete" : 2,

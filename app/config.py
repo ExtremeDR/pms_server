@@ -1,7 +1,9 @@
 import os
 
-base_url = os.environ.get('base_url')
-code_for_API = os.environ.get('code_for_API')
+base_url = 'https://magpie-concrete-clearly.ngrok-free.app'
+code_for_API = "3i7r4ybfwbatro387"
+
+path = r"D:\\Programming\\NGROK\\ngrok.exe"
 
 class Config(object):
     DB_URL_ANOTHER = os.environ.get('DB_URL_ANOTHER')
@@ -10,27 +12,10 @@ class Config(object):
     SECRET_KEY = '21242341vfwdefwf3s'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-'''
-1.	Добавление юзера
-    a.	Отправляю json c login, password, email
-    b.	Получаю json с результатом выполнения операции (message)
-2.	Проверка юзера на наличие в базе
-    a.	Отправляю json c login, password
-    b.	Получаю json c результатом выполнения операции (true/false, message)
-3.	Добавление проекта 
-    a.	Отправляю json c title, description, sprintsID (в виде json), headID, membersID (в виде json)
-    b.	 Получаю json с результатом выполнения операции (message)
-4.	Добавление задачи
-    a.	Отправляю json с description, userID, tagsID
-    b.	Получаю json с результатом выполнения операции (message)
-5.	Добавление спринта
-    a.	Отправляю json с startDate, endDate, tasksID (в виде json)
-    b.	Получаю json с результатом выполнения операции (message)
-6.	Добавление тега
-    a.	Отправляю json с name
-    b.	Получаю json с результатом выполнения операции (message)
 
-'''
+
+
+
 
 '''
 Error codes API 

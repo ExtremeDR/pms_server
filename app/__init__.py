@@ -1,8 +1,7 @@
+import atexit
+import subprocess
 from flask import Flask, render_template
-import app.config as config
 from .config import Config
-from sqlalchemy import select
-#from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import init_db,  db
 import app.handlers as hdl
 
@@ -10,11 +9,15 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     db.init_app(app) 
-
+    process = subprocess.Popen([config.path, "start", "--all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     with app.app_context():
         init_db()  # Инициализируем базу данных
+    def shutdown_ngrok():
+        process.terminate()
 
+    # Регистрация функции завершения работы
+    atexit.register(shutdown_ngrok)
     # Главная страница
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -24,7 +27,7 @@ def create_app(config_class=Config):
     def add_user(secret_code):
         return hdl._add_user(secret_code)
     
-    @app.route('/generate-code/<secret_code>', methods=['GET'])
+    @app.route('/generate-code/<secret_code>', methods=['POST'])
     def gen(secret_code):
         return hdl._gen(secret_code)
     
@@ -32,11 +35,11 @@ def create_app(config_class=Config):
     def add_tg_user(secret_code):
         return hdl._add_tg_user(secret_code)
         
-    @app.route('/is-user-exists/<secret_code>', methods=['GET'])
+    @app.route('/is-user-exists/<secret_code>', methods=['POST'])
     def is_user_exists(secret_code):
         return hdl._is_user_exists(secret_code)
     
-    @app.route('/check_telegram_id/<secret_code>', methods=['GET'])
+    @app.route('/check_telegram_id/<secret_code>', methods=['POST'])
     def check_telegram_id(secret_code):
         return hdl._check_telegram_id(secret_code)
 
@@ -68,19 +71,23 @@ def create_app(config_class=Config):
     def all_projects_by_login(secret_code):
         return hdl. _all_projects_by_login(secret_code)
     
-    @app.route('/projects_by_head_id/<secret_code>', methods=['GET'])
+    @app.route('/all_projects_by_tg_id/<secret_code>', methods=['POST'])
+    def all_projects_by_tg_id(secret_code):
+        return hdl._all_projects_by_tg_id(secret_code)
+    
+    @app.route('/projects_by_head_id/<secret_code>', methods=['POST'])
     def projects_by_head_id(secret_code):
         return hdl._projects_by_head_id(secret_code)
     
-    @app.route('/sprints_by_project_id/<secret_code>', methods=['GET'])
+    @app.route('/sprints_by_project_id/<secret_code>', methods=['POST'])
     def sprints_by_project_id(secret_code):
         return hdl._sprints_by_project_id(secret_code)
     
-    @app.route('/tasks_by_sprint_id/<secret_code>', methods=['GET'])
+    @app.route('/tasks_by_sprint_id/<secret_code>', methods=['POST'])
     def tasks_by_sprint_id(secret_code):
         return hdl._tasks_by_sprint_id(secret_code)
         
-    @app.route('/users_in_project/<secret_code>', methods=['GET'])
+    @app.route('/users_in_project/<secret_code>', methods=['POST'])
     def users_in_project(secret_code):
         return hdl._users_in_project(secret_code)
         

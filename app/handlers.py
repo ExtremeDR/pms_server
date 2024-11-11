@@ -1,7 +1,7 @@
 from flask import request, jsonify
 import app.config as config
 from werkzeug.security import generate_password_hash
-from sqlalchemy import select,delete
+from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import *
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ def _check_telegram_id(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
     data = request.json
-    tID = data.get('telegramID')
+    tID = data.get('tg_id')
 
     exists = db.session.execute(
         select(Users_tg).where(Users_tg.user_tg_id == tID)
@@ -455,3 +455,48 @@ def _delete_user_from_project(secret_code):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'code': 2000, 'message': str(e)}), 500
+
+def _all_projects_by_tg_id(secret_code):
+    if secret_code != config.code_for_API:
+        return jsonify({"error": "Unauthorized"}), 403
+    data = request.json
+    tg_id = data.get("tg_id")
+    id = db.session.execute(
+            select(Users.id)
+            .join(Users_tg, Users_tg.user_id == Users.id)
+            .where(Users_tg.user_tg_id == tg_id)
+        ).scalar()
+    try:
+        projects_as_head = db.session.execute(
+            select(Projects)
+            .where(Projects.head_id == id)  # Проверяем, является ли пользователь главой проекта
+        ).scalars().all()
+        projects_as_member = db.session.execute(
+            select(Projects)
+            .join(project_user, project_user.c.project_id == Projects.id)  # Соединяем с таблицей участников проекта
+            .where(project_user.c.user_id == id)  # Проверяем, является ли пользователь участником
+        ).scalars().all()
+        if projects_as_head or projects_as_member:
+            projects = [
+                {
+                    "id": project.id,
+                    "title": project.title,
+                    "description": project.description,
+                    "role": True
+                }
+                for project in projects_as_head
+            ]
+            projects2 = [
+                {
+                    "id": project.id,
+                    "title": project.title,
+                    "description": project.description,
+                    "role": False  
+                }
+                for project in projects_as_member
+            ]
+            return jsonify({'data': projects+projects2, 'code': 1001}), 200
+        else:
+            return jsonify({"data": "No projects found for this user.", 'code': 2000}), 404
+    except Exception as e:
+        return jsonify({"data": str(e), 'code': 2000}), 500
