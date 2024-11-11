@@ -1,4 +1,4 @@
 /alembic.ini
-/config.py
+/.env
 /migrations
 /venv
