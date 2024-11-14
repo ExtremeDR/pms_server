@@ -72,6 +72,8 @@ class Projects(db.Model):
     description: Mapped[str] = mapped_column(String(500))
     start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # Указан Python-тип datetime
     end_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)    # Указан Python-тип datetime
+    status: Mapped[int] = mapped_column(nullable=False)
+    type: Mapped[int] = mapped_column(nullable=False)
 
     head = relationship("Users", back_populates="projects")
     sprints = relationship("Sprints", back_populates="sprint_projects")
@@ -83,6 +85,7 @@ class Sprints(db.Model):
     start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # Указан Python-тип datetime
     end_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)    # Указан Python-тип datetime
     project_id: Mapped[int] = mapped_column(ForeignKey('Projects.id'))
+    status: Mapped[int] = mapped_column(nullable=False)
     
     tasks = relationship("Tasks", back_populates="sprint_tasks")
     sprint_projects = relationship("Projects", back_populates="sprints")

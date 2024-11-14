@@ -13,9 +13,32 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
+'''
+Status for Projects
+1 - active
+2 - finish
+3 - stopped
 
+Status for Sprints
+1 - active
+2 - finish
+3 - stopped
 
+Status for Tasks
+1 - active
+2 - finish
+3 - stopped
+4 - on_check
+'''
 
+'''
+types of Projects
+
+1 - Project without sprints
+2 - Project with sprints
+3 - Project with main tasks, sprintst and subtasks in them
+
+'''
 
 '''
 Error codes API 
