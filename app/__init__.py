@@ -3,11 +3,10 @@ import subprocess
 from flask import Flask, render_template
 from .config import Config
 from app.db_second import init_db,  db, migrate
-import app.handlers as hdl
-import app.creating_api as postApi
-import app.deleting_api as deleteApi
-import app.updating_api as updateApi
-import app.getting_api as getApi
+import app.api.creating_api as postApi
+import app.api.deleting_api as deleteApi
+import app.api.updating_api as updateApi
+import app.api.getting_api as getApi
 
 def create_app(config_class=Config):
     app = Flask(__name__)
