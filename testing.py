@@ -7,7 +7,7 @@ data = {
 
 data2 ={
     "user_id" : "2",
-    "uniqueCode" : "qwert",
+    "uniqueCode" : "aboba",
 }
 
 data3 = {
@@ -18,8 +18,8 @@ data3 = {
 # Artemka pass = 23vrcxw4rs
 # Dimka pass = 13523r
 data4 = {
-    "login" : "login123",
-    "password" : "password123",
+    "login" : "Artemka",
+    "password" : "23vrcxw4rs",
 }
 
 data5 = {
@@ -28,9 +28,9 @@ data5 = {
 }
 
 data6 = {
-    "user_id" : 1,
-    "project_title" : "Проект Project Management Studio",
-    "project_description" : "Система «Project Management Studio» предназначена для организации командной деятельности в проектах, где предусмотрено наличие команд и разбиение деятельности на задачи.",
+    "user_id" : 2,
+    "project_title" : "Проект для Вадимки",
+    "project_description" : "Абоба",
 }
 
 data7 = {
@@ -53,14 +53,19 @@ data9 = {
     "task_duration" : 7,
     "tags_ids" : [1],
 }
+
+data10 ={
+    "user_id" : 1,
+    "project_id":14,
+}
 #response = requests.post(f"{config.base_url}/create_task/{config.code_for_API}", json=data9)
 #response = requests.get(f"{config.base_url}/tasks_by_sprint_id/{config.code_for_API}", json=tasks_by_sprint_id)
-#response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
+response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
 #response = requests.post(f"{config.base_url}/create_sprint/{config.code_for_API}", json=data8)
 #print(response.json())
 #response = requests.post(f"{config.base_url}/create_project/{config.code_for_API}", json=data6)
-#response = requests.get(f"{config.base_url}/generate-code/{config.code_for_API}", json=data2)
-response = requests.post(f"{config.base_url}/is-user-exists/{config.code_for_API}", json=data4)
+#response = requests.post(f"{config.base_url}/generate-code/{config.code_for_API}", json=data2)
+#response = requests.post(f"{config.base_url}/is-user-exists/{config.code_for_API}", json=data4)
 #response = requests.post(f"{config.base_url}/add-user/{config.code_for_API}", json=data3)
 #response = requests.post(f"{config.base_url}/create_tag/{config.code_for_API}", json=data5)
 #print(response.json())

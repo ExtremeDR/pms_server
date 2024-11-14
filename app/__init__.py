@@ -2,13 +2,15 @@ import atexit
 import subprocess
 from flask import Flask, render_template
 from .config import Config
-from app.db_second import init_db,  db
+from app.db_second import init_db,  db, migrate
 import app.handlers as hdl
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     db.init_app(app) 
+    migrate.init_app(app, db)
+    
     process = subprocess.Popen([config.path, "start", "--all"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     with app.app_context():

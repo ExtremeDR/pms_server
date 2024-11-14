@@ -461,12 +461,14 @@ def _all_projects_by_tg_id(secret_code):
         return jsonify({"error": "Unauthorized"}), 403
     data = request.json
     tg_id = data.get("tg_id")
-    id = db.session.execute(
-            select(Users.id)
-            .join(Users_tg, Users_tg.user_id == Users.id)
-            .where(Users_tg.user_tg_id == tg_id)
-        ).scalar()
-    try:
+    id = data.get("user_id")
+    if not id:
+        id = db.session.execute(
+                select(Users.id)
+                .join(Users_tg, Users_tg.user_id == Users.id)
+                .where(Users_tg.user_tg_id == tg_id)
+            ).scalar()
+    try: 
         projects_as_head = db.session.execute(
             select(Projects)
             .where(Projects.head_id == id)  # Проверяем, является ли пользователь главой проекта
