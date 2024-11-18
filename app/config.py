@@ -1,15 +1,13 @@
 import os
 
-base_url = 'https://magpie-concrete-clearly.ngrok-free.app'
-code_for_API = "3i7r4ybfwbatro387"
-
 path = r"D:\\Programming\\NGROK\\ngrok.exe"
 
 class Config(object):
     DB_URL_ANOTHER = os.environ.get('DB_URL_ANOTHER')
-    
+    base_url = os.environ.get('base_url')
+    code_for_API = os.environ.get('code_for_API')
     SQLALCHEMY_DATABASE_URI = DB_URL_ANOTHER
-    SECRET_KEY = '21242341vfwdefwf3s'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
@@ -53,7 +51,7 @@ Correct
 1001 - Успешно
 
 Uncorrect
-2000 - General (not discribed) error
+2000 - General (еще не описанная) error
 2001 - Логин уже существует
 2002 - Email уже существует
 2003 - Ошибка при добавлении кода

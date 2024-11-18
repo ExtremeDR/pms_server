@@ -1,5 +1,5 @@
 from flask import request, jsonify
-import app.config as config
+from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db

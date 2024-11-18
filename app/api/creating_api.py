@@ -1,5 +1,6 @@
 from flask import request, jsonify
 import app.config as config
+from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
@@ -71,14 +72,16 @@ def _add_user(secret_code):
     existing_user_by_email = db.session.execute(
         select(Users).where(Users.email == data.get("email"))
         ).scalars().first()    
+    
     if existing_user_by_login:
         return jsonify({'success': False, 'code': 2001}), 400
+    
     if existing_user_by_email:
         return jsonify({'success': False, 'code': 2002}), 400
 
     new_user = Users(
         login=data.get("login"),
-        password_hash=generate_password_hash(data.get('pass')),
+        password_hash=generate_password_hash(data.get('password')),
         email=data.get("email")
     )
     db.session.add(new_user)
@@ -99,6 +102,8 @@ def _create_project(secret_code):
         head_id=head_id,
         description=project_description,
         start_date= datetime.now,
+        status= 1,
+        type= 1,
     )
 
     try:
@@ -117,14 +122,15 @@ def _create_sprint(secret_code):
 
     new_sprint = Sprints(
         start_date=datetime.now(),
+        status=1,
         end_date=datetime.now() + timedelta(days=sprint_duration), 
         project_id=project_id
     )
     try:
         db.session.add(new_sprint)
         db.session.commit()
-    except:
-        return jsonify({'success': False, 'code': 2000}) # Error добавить
+    except Exception as e:
+        return jsonify({'success': False, 'code': 2000, 'error' : e}), 400 # Error добавить
     return jsonify({'success': True, 'code': 1001})
 
 def _create_task(secret_code):
@@ -137,24 +143,38 @@ def _create_task(secret_code):
     task_duration = data.get("task_duration") # int
     tags = data.get('tags_ids') # list with tags_id = [1,2,3]
     name = data.get('name') # list with tags_id = [1,2,3]
-
-    # Создаем задание
-    new_task = Tasks(
-        description=task_description,
-        task_name=name,
-        status = 1,
-        set_time=datetime.now(),
-        end_time=datetime.now() + timedelta(days=task_duration),
-        user_id=user_id,
-        sprint_id=sprint_id
-    )
+    if task_duration:
+        new_task = Tasks(
+            description=task_description,
+            task_name=name,
+            status = 1,
+            set_time=datetime.now(),
+            end_time=datetime.now() + timedelta(days=task_duration),
+            user_id=user_id,
+            sprint_id=sprint_id
+        )
+    else:
+        
+        correct_sprint_end_date = db.session.execute(
+            select(Sprints.end_date).where(Sprints.id == sprint_id)
+            ).scalars().first()  
+        
+        new_task = Tasks(
+            description=task_description,
+            task_name=name,
+            status = 1,
+            set_time=datetime.now(),
+            end_time=correct_sprint_end_date,
+            user_id=user_id,
+            sprint_id=sprint_id
+        )
     tags = db.session.execute(
         select(Tags).where(Tags.id.in_(tags))
     ).scalars().all()
 
     if not tags:
         return jsonify({"error": "No tags found"}), 404
-    # Добавляем теги в задачу
+    
     for tag in tags:
         new_task.tags.append(tag)  # Добавляем тег в задачу
     try:
@@ -247,4 +267,3 @@ def _add_user_to_project(secret_code):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'code': 2012, 'message': str(e)}), 500  # Error добавления
-  

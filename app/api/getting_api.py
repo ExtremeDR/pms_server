@@ -1,5 +1,5 @@
 from flask import request, jsonify
-import app.config as config
+from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
@@ -59,7 +59,7 @@ def _all_projects_by_login(secret_code):
             .where(Users.login == user_login)
         ).scalars().all()
         if result:
-            projects = [{"id": project.id, "title": project.title, "description": project.description} for project in result]
+            projects = [{"id": project.id, "title": project.title, "description": project.description,"type":project.type} for project in result]
             return jsonify({'data' : projects, 'code' : 1001}), 200
         else:
             return jsonify({"data": "No projects found for this user.", 'code': 2000}), 404
@@ -190,6 +190,7 @@ def _all_projects_by_tg_id(secret_code):
             projects = [
                 {
                     "id": project.id,
+                    "type": project.type,
                     "title": project.title,
                     "description": project.description,
                     "role": True
@@ -199,6 +200,7 @@ def _all_projects_by_tg_id(secret_code):
             projects2 = [
                 {
                     "id": project.id,
+                    "type": project.type,
                     "title": project.title,
                     "description": project.description,
                     "role": False  

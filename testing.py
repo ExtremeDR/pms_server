@@ -60,8 +60,7 @@ data10 ={
 }
 #response = requests.post(f"{config.base_url}/create_task/{config.code_for_API}", json=data9)
 #response = requests.get(f"{config.base_url}/tasks_by_sprint_id/{config.code_for_API}", json=tasks_by_sprint_id)
-response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
-#response = requests.post(f"{config.base_url}/create_sprint/{config.code_for_API}", json=data8)
+#response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_for_API}", json=data10)
 #print(response.json())
 #response = requests.post(f"{config.base_url}/create_project/{config.code_for_API}", json=data6)
 #response = requests.post(f"{config.base_url}/generate-code/{config.code_for_API}", json=data2)
@@ -70,7 +69,12 @@ response = requests.post(f"{config.base_url}/add_user_to_project/{config.code_fo
 #response = requests.post(f"{config.base_url}/create_tag/{config.code_for_API}", json=data5)
 #print(response.json())
 #response = requests.post(f"{config.base_url}/add-tg-user", json=data)
+datas ={
+    "project_id": 1,
+    "sprint_duration": 222
 
+}
+response = requests.post(f"{config.base_url}/create_sprint/{config.code_for_API}", json=datas)
 data11 = {
     'tg_id':755525413
 }
