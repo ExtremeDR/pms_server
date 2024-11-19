@@ -3,12 +3,10 @@ import os
 path = r"D:\\Programming\\NGROK\\ngrok.exe"
 
 class Config(object):
-    DB_URL_ANOTHER = os.environ.get('DB_URL_ANOTHER')
     base_url = os.environ.get('base_url')
     code_for_API = os.environ.get('code_for_API')
-    SQLALCHEMY_DATABASE_URI = DB_URL_ANOTHER
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DB_URL_ANOTHER')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 '''

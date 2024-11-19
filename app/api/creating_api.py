@@ -1,5 +1,4 @@
 from flask import request, jsonify
-import app.config as config
 from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
@@ -101,7 +100,7 @@ def _create_project(secret_code):
         title=project_title,
         head_id=head_id,
         description=project_description,
-        start_date= datetime.now,
+        start_date= datetime.now(),
         status= 1,
         type= 1,
     )
@@ -109,8 +108,8 @@ def _create_project(secret_code):
     try:
         db.session.add(new_project)
         db.session.commit()
-    except:
-        return jsonify({'success': False, 'code': 2000}) # Error добавить
+    except Exception as e:
+        return jsonify({'success': False, 'code': 2000, 'mess':str(e)}), 500 # Error добавить
     return jsonify({'success': True, 'code': 1001})
 
 def _create_sprint(secret_code):
@@ -230,16 +229,16 @@ def _add_user_to_project(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
     data = request.json
-    user_id = data.get('user_id')  # ID пользователя, которого нужно добавить
-    project_id = data.get('project_id')  # ID проекта, в который нужно добавить пользователя
+    user_id = data.get('user_id')
+    project_id = data.get('project_id') 
 
     if not user_id or not project_id:
-        return jsonify({'success': False, 'code': 2008}), 400 # Error добавить
+        return jsonify({'success': False, 'code': 2008}), 400 
     user = db.session.execute(
         select(Users).where(Users.id == user_id)
     ).scalars().first()
     if not user:
-        return jsonify({'success': False, 'code': 2009}), 400 # Error добавить
+        return jsonify({'success': False, 'code': 2009}), 400
 
     project = db.session.execute(
         select(Projects).where(Projects.id == project_id)

@@ -29,8 +29,8 @@ class Users(db.Model):
     __tablename__ = 'Users'
     id: Mapped[int] = mapped_column(primary_key=True)
     login: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(nullable=False)
-    email: Mapped[str] = mapped_column(nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255),nullable=False)
+    email: Mapped[str] = mapped_column(String(255),nullable=False)
 
     telegram_users = relationship("Users_tg", back_populates="user", cascade="all, delete-orphan")
     tmp_codes = relationship("TMP_code", back_populates="user", cascade="all, delete-orphan")
@@ -59,7 +59,7 @@ class TMP_code(db.Model):
     __tablename__ = 'TMP_codes'
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('Users.id'), nullable=False, unique=True)
-    unic_code: Mapped[str] = mapped_column(nullable=False)
+    unic_code: Mapped[str] = mapped_column(String(255),nullable=False)
 
     user = relationship("Users", back_populates="tmp_codes")
 
@@ -73,7 +73,7 @@ class Projects(db.Model):
     start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # Указан Python-тип datetime
     end_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)    # Указан Python-тип datetime
     status: Mapped[int] = mapped_column(nullable=False)
-    type: Mapped[int] = mapped_column(nullable=False)
+
 
     head = relationship("Users", back_populates="projects")
     sprints = relationship("Sprints", back_populates="sprint_projects")
@@ -106,7 +106,7 @@ class Tasks(db.Model):
     
     sprint_tasks = relationship("Sprints", back_populates="tasks")
     user_task = relationship("Users", back_populates="task_user")
-    connect_tags = db.relationship('Tags', secondary=task_tags, backref='tasks')
+    tags = db.relationship('Tags', secondary=task_tags, back_populates='tasks')
 
 
 class Tags(db.Model):
@@ -115,7 +115,7 @@ class Tags(db.Model):
     description: Mapped[str] = mapped_column(String(255))
     tag_name: Mapped[str] = mapped_column(String(50), unique=True)
     
-    #posts = db.relationship('Tasks', secondary=task_tags, backref='tags')
+    tasks = db.relationship('Tasks', secondary=task_tags, back_populates='tags')
 
 
 
