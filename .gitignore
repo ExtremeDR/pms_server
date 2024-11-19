@@ -1,5 +1,3 @@
 /alembic.ini
 /.env
 /migrations
-/venv
-/testing.py

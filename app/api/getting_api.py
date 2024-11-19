@@ -3,7 +3,7 @@ from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from app.db_second import *
+from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user
 from datetime import datetime, timedelta
 
 def _check_telegram_id(secret_code):
@@ -15,12 +15,12 @@ def _check_telegram_id(secret_code):
     exists = db.session.execute(
         select(Users_tg).where(Users_tg.user_tg_id == tID)
     ).scalars().first() is not None
-    
+
     if exists:
         exists = "True"
     else:
         exists = "False"
-        
+
     response = {'exists': exists}
     return jsonify(response)
 
@@ -35,13 +35,13 @@ def _is_user_exists(secret_code):
     user = db.session.execute(
         select(Users).where(Users.login == login)
     ).scalars().first()
-    
+
     if user:
         is_true_pass = Users.check_password(user, pas)
         exists = "True" if is_true_pass else "False"
     else:
         exists = "False"
-        
+
     response = {'exists': exists}
     return jsonify(response)
 
@@ -66,7 +66,7 @@ def _all_projects_by_login(secret_code):
 
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _projects_by_head_id(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -74,7 +74,7 @@ def _projects_by_head_id(secret_code):
     user_id = data.get("user_id")
 
     try:
-       
+
         projects = db.session.execute(
             select(Projects)
             .where(Projects.head_id == user_id)
@@ -88,7 +88,7 @@ def _projects_by_head_id(secret_code):
 
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _sprints_by_project_id(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -109,7 +109,7 @@ def _sprints_by_project_id(secret_code):
 
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _tasks_by_sprint_id(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -129,7 +129,7 @@ def _tasks_by_sprint_id(secret_code):
                 .join(task_tags, task_tags.c.tag_id == Tags.id)
                 .where(task_tags.c.task_id == task.id)
             ).scalars().all()
-            
+
             task_data = {
                 "task_id": task.id,
                 "task_name": task.task_name,
@@ -141,7 +141,7 @@ def _tasks_by_sprint_id(secret_code):
         return jsonify({'data' : tasks_data, 'code' : 1001}), 200
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _users_in_project(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -163,7 +163,7 @@ def _users_in_project(secret_code):
 
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _all_projects_by_tg_id(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -176,7 +176,7 @@ def _all_projects_by_tg_id(secret_code):
                 .join(Users_tg, Users_tg.user_id == Users.id)
                 .where(Users_tg.user_tg_id == tg_id)
             ).scalar()
-    try: 
+    try:
         projects_as_head = db.session.execute(
             select(Projects)
             .where(Projects.head_id == id)  # Проверяем, является ли пользователь главой проекта
@@ -203,7 +203,7 @@ def _all_projects_by_tg_id(secret_code):
                     "type": project.type,
                     "title": project.title,
                     "description": project.description,
-                    "role": False  
+                    "role": False
                 }
                 for project in projects_as_member
             ]

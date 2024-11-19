@@ -3,7 +3,7 @@ from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from app.db_second import *
+from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user
 from datetime import datetime, timedelta
 
 def _add_tg_user(secret_code):
@@ -33,15 +33,15 @@ def _add_tg_user(secret_code):
 
     try:
         tmp_code_entry = db.session.execute(select(TMP_code).where(TMP_code.user_id == user_id)).scalars().first()
-        if tmp_code_entry:  
-            db.session.delete(tmp_code_entry)  
-        db.session.add(new_user_tg) 
+        if tmp_code_entry:
+            db.session.delete(tmp_code_entry)
+        db.session.add(new_user_tg)
         db.session.commit()
         return jsonify({'success': True, 'code': 1001}), 201
     except Exception as e:
         db.session.rollback()  # Откатываем изменения в случае ошибки
         return jsonify({'success': False, 'code': 2007, 'message': str(e)}), 500
-    
+
 def _gen(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
@@ -53,28 +53,28 @@ def _gen(secret_code):
         unic_code=user_code
     )
     try:
-        db.session.add(new_tmp_code)  
-        db.session.commit() 
+        db.session.add(new_tmp_code)
+        db.session.commit()
         return jsonify({'success': True, 'code': 1001}), 201
     except Exception as e:
         db.session.rollback()  # Откатываем изменения в случае ошибки
         return jsonify({'success': False, 'code': 2003,'message': str(e)}), 500
-    
+
 def _add_user(secret_code):
     if secret_code != config.code_for_API:
         return jsonify({"error": "Unauthorized"}), 403
-    data = request.json 
+    data = request.json
 
     existing_user_by_login = db.session.execute(
         select(Users).where(Users.login == data.get("login"))
         ).scalars().first()
     existing_user_by_email = db.session.execute(
         select(Users).where(Users.email == data.get("email"))
-        ).scalars().first()    
-    
+        ).scalars().first()
+
     if existing_user_by_login:
         return jsonify({'success': False, 'code': 2001}), 400
-    
+
     if existing_user_by_email:
         return jsonify({'success': False, 'code': 2002}), 400
 
@@ -122,7 +122,7 @@ def _create_sprint(secret_code):
     new_sprint = Sprints(
         start_date=datetime.now(),
         status=1,
-        end_date=datetime.now() + timedelta(days=sprint_duration), 
+        end_date=datetime.now() + timedelta(days=sprint_duration),
         project_id=project_id
     )
     try:
@@ -153,11 +153,11 @@ def _create_task(secret_code):
             sprint_id=sprint_id
         )
     else:
-        
+
         correct_sprint_end_date = db.session.execute(
             select(Sprints.end_date).where(Sprints.id == sprint_id)
-            ).scalars().first()  
-        
+            ).scalars().first()
+
         new_task = Tasks(
             description=task_description,
             task_name=name,
@@ -173,7 +173,7 @@ def _create_task(secret_code):
 
     if not tags:
         return jsonify({"error": "No tags found"}), 404
-    
+
     for tag in tags:
         new_task.tags.append(tag)  # Добавляем тег в задачу
     try:
@@ -211,7 +211,7 @@ def _create_task_from_other_task(secret_code):
     existing_task = db.session.get(Tasks, task_id)
 
     copied_task = Tasks(
-        description=existing_task.description,  
+        description=existing_task.description,
         set_time=datetime.now(),
         end_time=existing_task.end_time,
         user_id=existing_task.user_id,
@@ -230,10 +230,10 @@ def _add_user_to_project(secret_code):
         return jsonify({"error": "Unauthorized"}), 403
     data = request.json
     user_id = data.get('user_id')
-    project_id = data.get('project_id') 
+    project_id = data.get('project_id')
 
     if not user_id or not project_id:
-        return jsonify({'success': False, 'code': 2008}), 400 
+        return jsonify({'success': False, 'code': 2008}), 400
     user = db.session.execute(
         select(Users).where(Users.id == user_id)
     ).scalars().first()

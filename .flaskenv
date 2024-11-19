@@ -1,3 +1,2 @@
-FLASK_APP=app:create_app
+FLASK_APP=app:app:app
 FLASK_ENV=development
-FLASK_DEBUG=True
