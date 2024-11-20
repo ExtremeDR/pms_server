@@ -12,7 +12,6 @@ class Config(object):
     #code_for_API = "3i7r4ybfwbatro387"
     #base_url = os.environ.get('base_url')
     code_for_API = os.environ.get('code_for_API')
-    SQLALCHEMY_POOL_SIZE = 5  # Количество соединений в пуле
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     #SQLALCHEMY_TRACK_MODIFICATIONS = False
 
