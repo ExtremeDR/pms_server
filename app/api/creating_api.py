@@ -140,7 +140,7 @@ def _create_task(secret_code):
     task_description = data.get("task_description")
     task_duration = data.get("task_duration") # int
     tags = data.get('tags_ids') # list with tags_id = [1,2,3]
-    name = data.get('name') # list with tags_id = [1,2,3]
+    name = data.get('name')
     if task_duration:
         new_task = Tasks(
             description=task_description,
@@ -197,9 +197,9 @@ def _create_tag(secret_code):
     try:
         db.session.add(new_tag)
         db.session.commit()
-    except:
-        return jsonify({'success': False, 'code': 2000})
-    return jsonify({'success': True, 'code': 1001})
+    except Exception as e:
+        return jsonify({'success': False, 'code': 2000, 'mes':str(e)}), 500
+    return jsonify({'success': True, 'code': 1001}), 200
 
 def _create_task_from_other_task(secret_code):
     if secret_code != config.code_for_API:
