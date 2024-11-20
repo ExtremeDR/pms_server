@@ -100,7 +100,7 @@ def _create_project(secret_code):
         title=project_title,
         head_id=head_id,
         description=project_description,
-        start_date= datetime.now(),
+        start_date= datetime.now()+ timedelta(hours=3),
         status= 1,
     )
 
@@ -119,16 +119,16 @@ def _create_sprint(secret_code):
     sprint_duration = data.get("sprint_duration") # int
 
     new_sprint = Sprints(
-        start_date=datetime.now(),
+        start_date=datetime.now()+ timedelta(hours=3),
         status=1,
-        end_date=datetime.now() + timedelta(days=sprint_duration),
+        end_date=datetime.now()+ timedelta(hours=3) + timedelta(days=sprint_duration),
         project_id=project_id
     )
     try:
         db.session.add(new_sprint)
         db.session.commit()
     except Exception as e:
-        return jsonify({'success': False, 'code': 2000, 'error' : e}), 400 # Error добавить
+        return jsonify({'success': False, 'code': 2000, 'error' : str(e)}), 400 # Error добавить
     return jsonify({'success': True, 'code': 1001})
 
 def _create_task(secret_code):
@@ -146,8 +146,8 @@ def _create_task(secret_code):
             description=task_description,
             task_name=name,
             status = 1,
-            set_time=datetime.now(),
-            end_time=datetime.now() + timedelta(days=task_duration),
+            set_time=datetime.now()+ timedelta(hours=3),
+            end_time=datetime.now()+ timedelta(hours=3) + timedelta(days=task_duration),
             user_id=user_id,
             sprint_id=sprint_id
         )
@@ -161,7 +161,7 @@ def _create_task(secret_code):
             description=task_description,
             task_name=name,
             status = 1,
-            set_time=datetime.now(),
+            set_time=datetime.now()+ timedelta(hours=3),
             end_time=correct_sprint_end_date,
             user_id=user_id,
             sprint_id=sprint_id
@@ -211,7 +211,7 @@ def _create_task_from_other_task(secret_code):
 
     copied_task = Tasks(
         description=existing_task.description,
-        set_time=datetime.now(),
+        set_time=datetime.now()+ timedelta(hours=3),
         end_time=existing_task.end_time,
         user_id=existing_task.user_id,
         sprint_id=existing_task.sprint_id,
