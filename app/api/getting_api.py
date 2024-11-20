@@ -3,7 +3,7 @@ from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user
+from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
 
 def _check_telegram_id(secret_code):
@@ -190,7 +190,6 @@ def _all_projects_by_tg_id(secret_code):
             projects = [
                 {
                     "id": project.id,
-                    "type": project.type,
                     "title": project.title,
                     "description": project.description,
                     "role": True
@@ -200,7 +199,6 @@ def _all_projects_by_tg_id(secret_code):
             projects2 = [
                 {
                     "id": project.id,
-                    "type": project.type,
                     "title": project.title,
                     "description": project.description,
                     "role": False

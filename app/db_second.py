@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import BigInteger, Column, DateTime, String, ForeignKey, Numeric, Integer, Table, select, MetaData
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
-from flask_migrate import Migrate
+from flask_migrate import Migrate # type: ignore
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -95,8 +95,6 @@ class Tasks(db.Model):
     __tablename__ = 'Tasks'
     id: Mapped[int] = mapped_column(primary_key=True)
     description: Mapped[str] = mapped_column(String(255), nullable=False)
-    #status: Mapped[bool] = mapped_column(db.Boolean(), nullable=False)
-    parent_task_id: Mapped[int] = mapped_column(ForeignKey('Tasks.id'), nullable=True)
     status: Mapped[int] = mapped_column(nullable=False)
     task_name: Mapped[str] = mapped_column(String(255), nullable=False)
     set_time: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now(timezone.utc))

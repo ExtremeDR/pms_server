@@ -3,7 +3,7 @@ from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
-from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user
+from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
 
 def _add_tg_user(secret_code):
@@ -102,7 +102,6 @@ def _create_project(secret_code):
         description=project_description,
         start_date= datetime.now(),
         status= 1,
-        type= 1,
     )
 
     try:
