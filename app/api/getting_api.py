@@ -211,3 +211,40 @@ def _all_projects_by_tg_id(secret_code):
             return jsonify({"data": "No projects found for this user.", 'code': 2000}), 404
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
+    
+def _all_tasks_by_user_id_or_tg_id(secret_code):
+    if secret_code != config.code_for_API:
+        return jsonify({"error": "Unauthorized"}), 403
+    data = request.json
+    tg_id = data.get("tg_id")
+    id = data.get("user_id")
+    if not id:
+        id = db.session.execute(
+                select(Users.id)
+                .join(Users_tg, Users_tg.user_id == Users.id)
+                .where(Users_tg.user_tg_id == tg_id)
+            ).scalar()
+    try:
+        tasks = db.session.execute(
+            select(Tasks)
+            .where(Tasks.user_id == id)  # Проверяем, является ли пользователь участником
+        ).scalars().all()
+        if tasks:
+            TASK = [
+                {
+                    "id": task.id,
+                    "title": task.task_name,
+                    "description": task.description,
+                    "set_time": task.set_time,
+                    "end_time": task.end_time,
+                    "status": task.status,
+                    "user_id": task.user_id,
+                    "sprint_id": task.sprint_id if not None else 0,
+                }
+                for task in tasks
+            ]
+            return make_response(jsonify({'data': TASK, 'code': 1001})
+                                 , 200
+                                 , {'Content-Type': 'application/json; charset=utf-8'})
+    except Exception as e:
+        return jsonify({'code': 2000,"data": str(e) }), 500
