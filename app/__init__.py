@@ -74,6 +74,10 @@ def create_app():
     def all_projects_by_tg_id(secret_code):
         return getApi._all_projects_by_tg_id(secret_code)
 
+    @app.route('/all_tasks_by_user_id_or_tg_id/<secret_code>', methods=['POST'])
+    def all_tasks_by_user_id_or_tg_id(secret_code):
+        return getApi._all_tasks_by_user_id_or_tg_id(secret_code)
+    
     @app.route('/projects_by_head_id/<secret_code>', methods=['POST'])
     def projects_by_head_id(secret_code):
         return getApi._projects_by_head_id(secret_code)
