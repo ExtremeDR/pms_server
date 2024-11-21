@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import make_response, request, jsonify
 from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
@@ -205,7 +205,8 @@ def _all_projects_by_tg_id(secret_code):
                 }
                 for project in projects_as_member
             ]
-            return jsonify({'data': projects+projects2, 'code': 1001}), 200
+            return make_response(jsonify({'data': projects + projects2, 'code': 1001}), 200, {'Content-Type': 'application/json; charset=utf-8'})
+            #return jsonify({'data': projects+projects2, 'code': 1001}), 200
         else:
             return jsonify({"data": "No projects found for this user.", 'code': 2000}), 404
     except Exception as e:
