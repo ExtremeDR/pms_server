@@ -246,5 +246,7 @@ def _all_tasks_by_user_id_or_tg_id(secret_code):
             return make_response(jsonify({'data': TASK, 'code': 1001})
                                  , 200
                                  , {'Content-Type': 'application/json; charset=utf-8'})
+        else:
+            return jsonify({"data": "No tasks found for this user.", 'code': 2000}), 404
     except Exception as e:
         return jsonify({'code': 2000,"data": str(e) }), 500
