@@ -28,24 +28,25 @@ def _all_projects_by_tg_id_or_user_id():
         projects = []
         projects2 = []
         if projects_as_head or projects_as_member:
-            projects = [
-                {
-                    "id": project.id,
-                    "title": project.title,
-                    "description": project.description,
-                    "role": True
-                }
-                for project in projects_as_head
-            ]
-            projects2 = [
-                {
-                    "id": project.id,
-                    "title": project.title,
-                    "description": project.description,
-                    "role": False
-                }
-                for project in projects_as_member
-            ]
+            if len(projects_as_head) > 0 or len(projects_as_member) > 0:
+                projects = [
+                    {
+                        "id": project.id,
+                        "title": project.title,
+                        "description": project.description,
+                        "role": True
+                    }
+                    for project in projects_as_head
+                ]
+                projects2 = [
+                    {
+                        "id": project.id,
+                        "title": project.title,
+                        "description": project.description,
+                        "role": False
+                    }
+                    for project in projects_as_member
+                ]
         return api.to_json(projects+projects2)
     except Exception as e:
         return jsonify({'code': 2000,"data": str(e) }), 500
