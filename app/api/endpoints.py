@@ -7,6 +7,7 @@ from sqlalchemy import case, select,delete
 from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
 from app.api.api_base import APIClient
+import traceback
 api = APIClient(db,config)
 qm = QueryManager(api)
 
@@ -14,14 +15,15 @@ qm = QueryManager(api)
 def _all_projects_by_tg_id_or_user_id():
     params = api.get_params('user_id', 'tg_id', request=request)
     if params.get('tg_id'):
-            params['user_id'] = qm.get_user_id(tg_id=params['tg_id'])
+            params['user_id'] = qm.get_user_id(params.get('tg_id'))
     try:
         projects_as_head = api.execute_query(
-            select(Projects)
+            select(Projects.id.label('id'), Projects.title.label('title'), Projects.description.label('description'))
             .where(Projects.head_id == params['user_id'])
         )
+
         projects_as_member = api.execute_query(
-            select(Projects)
+            select(Projects.id.label('id'), Projects.title.label('title'), Projects.description.label('description'))
             .join(project_user, project_user.c.project_id == Projects.id)
             .where(project_user.c.user_id == params['user_id'])
         )
@@ -49,7 +51,7 @@ def _all_projects_by_tg_id_or_user_id():
                 ]
         return api.to_json(projects+projects2)
     except Exception as e:
-        return jsonify({'code': 2000,"data": str(e) }), 500
+        return jsonify({'code': 2000,"data": str(e)}), 500
 
 def _tasks():
     params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
