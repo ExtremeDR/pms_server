@@ -90,10 +90,3 @@ class QueryManager:
         if res:
             return res[0].user_id
         raise ValueError("User not found for the provided tg_id.")
-        if not param['user_id'] and param['tg_id']:
-            param['user_id'] = self.api.execute_query(
-                    select(Users.id)
-                    .join(Users_tg, Users_tg.user_id ==Users.id)
-                    .where(Users_tg.user_tg_id == param['tg_id'])
-                )
-        return param['user_id']
