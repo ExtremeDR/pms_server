@@ -12,16 +12,18 @@ qm = QueryManager(api)
 
 
 def _all_projects_by_tg_id_or_user_id():
-    user_id = qm.get_user_id('user_id',request=request)
+    params = api.get_params('user_id', 'tg_id', request=request)
+    if params.get('tg_id'):
+            params['user_id'] = qm.get_user_id(tg_id=params['tg_id'])
     try:
         projects_as_head = api.execute_query(
             select(Projects)
-            .where(Projects.head_id == user_id)
+            .where(Projects.head_id == params['user_id'])
         )
         projects_as_member = api.execute_query(
             select(Projects)
             .join(project_user, project_user.c.project_id == Projects.id)
-            .where(project_user.c.user_id == user_id)
+            .where(project_user.c.user_id == params['user_id'])
         )
         projects = []
         projects2 = []

@@ -81,13 +81,15 @@ class QueryManager:
             return TASKS
         except Exception as e:
             return [str(e)]
-
-    def get_user_id(self,*params,request) -> int:
-        param = self.api.get_params(params, request=request)
-
-        Users = self.api.db.metadata.tables["Users"]
+        
+    def get_user_id(self,tg_id:int,request) -> int:
+        #Users = self.api.db.metadata.tables["Users"]
         Users_tg = self.api.db.metadata.tables.get("Users_tg")
-
+        query = select(Users_tg.c.user_id).where(Users_tg.c.user_tg_id == tg_id)
+        res = self.api.execute_query(query)
+        if res:
+            return res[0].user_id
+        raise ValueError("User not found for the provided tg_id.")
         if not param['user_id'] and param['tg_id']:
             param['user_id'] = self.api.execute_query(
                     select(Users.id)
