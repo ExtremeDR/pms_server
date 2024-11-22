@@ -24,9 +24,7 @@ def _check_telegram_id(secret_code):
     response = {'exists': exists}
     return jsonify(response)
 
-def _is_user_exists(secret_code):
-    if secret_code != config.code_for_API:
-        return jsonify({"error": "Unauthorized"}), 403
+def _is_user_exists():
     data = request.json
     login = data.get('login')
     pas = data.get('password')
@@ -210,7 +208,7 @@ def _is_user_exists(secret_code):
 #             return jsonify({"data": "No projects found for this user.", 'code': 2000}), 404
 #     except Exception as e:
 #         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 # def _all_tasks_by_user_id_or_tg_id(secret_code):
 #     if secret_code != config.code_for_API:
 #         return jsonify({"error": "Unauthorized"}), 403
@@ -249,4 +247,4 @@ def _is_user_exists(secret_code):
 #             return jsonify({"data": "No tasks found for this user.", 'code': 2000}), 404
 #     except Exception as e:
 #         return jsonify({'code': 2000,"data": str(e) }), 500
-    
+

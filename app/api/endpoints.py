@@ -69,7 +69,7 @@ def _users_in_project():
 
     try:
         users = api.execute_query(
-            select(Users)
+            select(Users.id.label('id'),Users.email.label('email'),Users.login.label('login'))
             .join(project_user, project_user.c.user_id == Users.id)
             .where(project_user.c.project_id == param['project_id'])
         )
@@ -81,24 +81,56 @@ def _users_in_project():
 
         return api.to_json(users_data)
 
+    except:
+        return jsonify({"data": traceback.format_exc(), 'code': 2000}), 500
+
+# Функция для выполнения запроса спринтов по project_id
+def get_sprints_by_project_id(project_id):
+    return api.execute_query(
+        select(Sprints.id.label('id'),
+               Sprints.start_date.label('start_date'),
+               Sprints.end_date.label('end_date'),
+               Sprints.status.label('status'))
+        .where(Sprints.project_id == project_id)
+    )
+
+# Функция для обработки данных спринтов
+def format_sprints_data(sprints):
+    return [{
+        "id": sprint.id,
+        "start_date": sprint.start_date,
+        "end_date": sprint.end_date,
+        "status": sprint.status
+    } for sprint in sprints]
+
+# Главная функция обработчик
+def _sprints_by_project_id():
+    param = api.get_params('project_id', request=request)
+    project_id = param.get('project_id')
+
+    if not project_id:
+        return jsonify({"error": "Project ID is required", "code": 400}), 400
+
+    try:
+        sprints = get_sprints_by_project_id(project_id)
+        sprints_data = format_sprints_data(sprints) if sprints else []
+        return api.to_json(sprints_data)
     except Exception as e:
+        # Логирование и обработка ошибок
         return jsonify({"data": str(e), 'code': 2000}), 500
 
-def _sprints_by_project_id():
+
+def _sprints_by_project_i():
     param = api.get_params('project_id', request=request)
 
     try:
         sprints = api.execute_query(
-            select(Sprints)
+            select(Sprints.id.label('id'),Sprints.start_date.label('start_date'), Sprints.end_date.label('end_date'),Sprints.status.label('status'))
             .where(Sprints.project_id == param['project_id'])
         )
-
         sprints_data = []
-
         if sprints:
-            sprints_data = [{"id": sprint.id, "start_date": sprint.start_date, "end_date": sprint.end_date} for sprint in sprints]
-
+            sprints_data = [{"id": sprint.id, "start_date": sprint.start_date, "end_date": sprint.end_date, "status":sprint.status} for sprint in sprints]
         return api.to_json(sprints_data)
-
-    except Exception as e:
-        return jsonify({"data": str(e), 'code': 2000}), 500
+    except:
+        return jsonify({"data": traceback.format_exc(), 'code': 2000}), 500

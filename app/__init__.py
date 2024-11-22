@@ -28,60 +28,60 @@ def create_app():
     def index():
         return render_template('index.html')
 
-    @app.route('/add-user/<secret_code>', methods=['POST'])
+    @app.route('/add-user', methods=['POST'])
     @token_required
-    def add_user(secret_code):
-        return postApi._add_user(secret_code)
+    def add_user():
+        return postApi._add_user()
 
-    @app.route('/generate-code/<secret_code>', methods=['POST'])
+    @app.route('/generate-code', methods=['POST'])
     @token_required
-    def gen(secret_code):
-        return postApi._gen(secret_code)
+    def gen():
+        return postApi._gen()
 
-    @app.route('/add-tg-user/<secret_code>', methods=['POST'])
+    @app.route('/add-tg-user', methods=['POST'])
     @token_required
-    def add_tg_user(secret_code):
-        return postApi._add_tg_user(secret_code)
+    def add_tg_user():
+        return postApi._add_tg_user()
 
-    @app.route('/is-user-exists/<secret_code>', methods=['POST'])
+    @app.route('/is-user-exists', methods=['POST'])
     @token_required
-    def is_user_exists(secret_code):
-        return getApi._is_user_exists(secret_code)
+    def is_user_exists():
+        return getApi._is_user_exists()
 
-    @app.route('/check_telegram_id/<secret_code>', methods=['POST'])
+    @app.route('/check_telegram_id', methods=['POST'])
     @token_required
-    def check_telegram_id(secret_code):
-        return getApi._check_telegram_id(secret_code)
+    def check_telegram_id():
+        return getApi._check_telegram_id()
 
-    @app.route('/create_project/<secret_code>', methods=['POST'])
+    @app.route('/create_project', methods=['POST'])
     @token_required
-    def create_project(secret_code):
-        return postApi._create_project(secret_code)
+    def create_project():
+        return postApi._create_project()
 
-    @app.route('/create_task/<secret_code>', methods=['POST'])
+    @app.route('/create_task', methods=['POST'])
     @token_required
-    def create_task(secret_code):
-        return postApi._create_task(secret_code)
+    def create_task():
+        return postApi._create_task()
 
-    @app.route('/change_task_status/<secret_code>', methods=['PATCH'])
+    @app.route('/change_task_status', methods=['PATCH'])
     @token_required
-    def change_task_status(secret_code):
-        return updateApi._change_task_status(secret_code)
+    def change_task_status():
+        return updateApi._change_task_status()
 
-    @app.route('/create_sprint/<secret_code>', methods=['POST'])
+    @app.route('/create_sprint', methods=['POST'])
     @token_required
-    def create_sprint(secret_code):
-        return postApi._create_sprint(secret_code)
+    def create_sprint():
+        return postApi._create_sprint()
 
-    @app.route('/create_tag/<secret_code>', methods=['POST'])
+    @app.route('/create_tag', methods=['POST'])
     @token_required
-    def create_tag(secret_code):
-        return postApi._create_tag(secret_code)
+    def create_tag():
+        return postApi._create_tag()
 
-    @app.route('/create_task_from_other_task/<secret_code>', methods=['POST'])
+    @app.route('/create_task_from_other_task', methods=['POST'])
     @token_required
-    def create_task_from_other_task(secret_code):
-        return postApi._create_task_from_other_task(secret_code)
+    def create_task_from_other_task():
+        return postApi._create_task_from_other_task()
 
     @app.route('/all_projects', methods=['GET'])
     @token_required
@@ -99,35 +99,35 @@ def create_app():
     def all_tasks_by_user_id_or_tg_id():
         return API._tasks()
 
-    # @app.route('/projects_by_head_id/<secret_code>', methods=['POST'])
+    # @app.route('/projects_by_head_id/<>', methods=['POST'])
     # @token_required
-    # def projects_by_head_id(secret_code):
-    #     return getApi._projects_by_head_id(secret_code)
+    # def projects_by_head_id():
+    #     return getApi._projects_by_head_id()
 
     @app.route('/sprints_by_project_id', methods=['GET'])
     @token_required
     def sprints_by_project_id():
         return API._sprints_by_project_id()
 
-    # @app.route('/tasks_by_sprint_id/<secret_code>', methods=['GET'])
+    # @app.route('/tasks_by_sprint_id/<>', methods=['GET'])
     # @token_required
     # def tasks_by_sprint_id():
     #     return getApi._tasks_by_sprint_id()
 
-    @app.route('/users_in_project/<secret_code>', methods=['GET'])
+    @app.route('/users_in_project', methods=['GET'])
     @token_required
     def users_in_project():
         return API._users_in_project()
 
-    @app.route('/add_user_to_project/<secret_code>', methods=['POST'])
+    @app.route('/add_user_to_project', methods=['POST'])
     @token_required
-    def add_user_to_project(secret_code):
-        return postApi._add_user_to_project(secret_code)
+    def add_user_to_project():
+        return postApi._add_user_to_project()
 
-    @app.route('/delete_user_from_project/<secret_code>', methods=['DELETE'])
+    @app.route('/delete_user_from_project', methods=['DELETE'])
     @token_required
-    def delete_user_from_project(secret_code):
-        return deleteApi._delete_user_from_project(secret_code)
+    def delete_user_from_project():
+        return deleteApi._delete_user_from_project()
     return app
 
 # if __name__ == '__main__':

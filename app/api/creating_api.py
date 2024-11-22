@@ -60,9 +60,7 @@ def _gen(secret_code):
         db.session.rollback()  # Откатываем изменения в случае ошибки
         return jsonify({'success': False, 'code': 2003,'message': str(e)}), 500
 
-def _add_user(secret_code):
-    if secret_code != config.code_for_API:
-        return jsonify({"error": "Unauthorized"}), 403
+def _add_user():
     data = request.json
 
     existing_user_by_login = db.session.execute(
