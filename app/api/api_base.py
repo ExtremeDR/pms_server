@@ -1,7 +1,7 @@
 from functools import wraps
 import jwt
 from flask import jsonify, request
-from config import Config as cf
+from app.config import Config as cf
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -10,7 +10,6 @@ def token_required(f):
             return jsonify({"message": "Token is missing!"}), 403
         try:
             decoded = jwt.decode(token, cf.SECRET_KEY, algorithms=["HS256"])
-            request.user_id = decoded['user_id']
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Token has expired!"}), 403
         except jwt.InvalidTokenError:
@@ -20,37 +19,38 @@ def token_required(f):
 
 
 class APIClient:
-    
+
     def __init__(self, db, config):
         self.db = db
         self.config = config
-    
+
     def execute_query(self, query):
         try:
-            return self.db.session.execute(query).scalars().all()
+            #return self.db.session.execute(query).scalars().all()
+            return self.db.session.execute(query).fetchall()
         except Exception as e:
             return jsonify({"error": str(e)}), 500
-        
+
     def get_datas(*params):
         """
         Получает указанные параметры из request.args.
-        
+
         :param params: Имена параметров, которые нужно получить.
         :return: Словарь с указанными параметрами и их значениями.
         """
         result = {param: (request.json).get(param) for param in params}
-        return result    
-    
+        return result
+
     def get_params(*params, request):
         """
         Получает указанные параметры из request.args.
-        
+
         :param params: Имена параметров, которые нужно получить.
         :return: Словарь с указанными параметрами и их значениями.
         """
         result = {param: request.args.get(param) for param in params}
         return result
-    
+
     def to_json(self, data, message="Success", code=1001):
         if data:
             return jsonify({"data": data, "message": message, "code": code}), 200

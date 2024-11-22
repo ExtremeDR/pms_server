@@ -6,22 +6,22 @@ from sqlalchemy import case, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
-from api_base import APIClient
+from app.api.api_base import APIClient
 api = APIClient(db,config)
 qm = QueryManager(api)
 
 
 def _all_projects_by_tg_id_or_user_id():
-    user_id = qm.get_user_id('user_id')
+    user_id = qm.get_user_id('user_id',request=request)
     try:
         projects_as_head = api.execute_query(
             select(Projects)
-            .where(Projects.head_id == user_id) 
+            .where(Projects.head_id == user_id)
         )
         projects_as_member = api.execute_query(
             select(Projects)
-            .join(project_user, project_user.c.project_id == Projects.id) 
-            .where(project_user.c.user_id == user_id) 
+            .join(project_user, project_user.c.project_id == Projects.id)
+            .where(project_user.c.user_id == user_id)
         )
         projects = []
         projects2 = []
@@ -47,7 +47,7 @@ def _all_projects_by_tg_id_or_user_id():
         return api.to_json(projects+projects2)
     except Exception as e:
         return jsonify({'code': 2000,"data": str(e) }), 500
-    
+
 def _tasks():
     params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
     # Проверка, чтобы не передавалось несколько параметров одновременно
@@ -57,28 +57,28 @@ def _tasks():
         TASKS = qm.get_tasks(params)
         return api.to_json(TASKS)
     except Exception as e:
-        return jsonify({'code': 2000,"data": str(e) }), 500
-    
+        return jsonify({'code': 2,"data": str(e) }), 500
+
 def _users_in_project():
     param = api.get_params('project_id', request=request)
-    
+
     try:
         users = api.execute_query(
             select(Users)
             .join(project_user, project_user.c.user_id == Users.id)
             .where(project_user.c.project_id == param['project_id'])
         )
-        
+
         users_data = []
-        
+
         if users:
             users_data = [{"id": user.id, "login": user.login, "email": user.email} for user in users]
-        
+
         return api.to_json(users_data)
-    
+
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-    
+
 def _sprints_by_project_id():
     param = api.get_params('project_id', request=request)
 
@@ -87,13 +87,13 @@ def _sprints_by_project_id():
             select(Sprints)
             .where(Sprints.project_id == param['project_id'])
         )
-        
+
         sprints_data = []
-        
+
         if sprints:
             sprints_data = [{"id": sprint.id, "start_date": sprint.start_date, "end_date": sprint.end_date} for sprint in sprints]
-        
+
         return api.to_json(sprints_data)
-    
+
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500

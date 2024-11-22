@@ -1,13 +1,15 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,jsonify
 from .config import Config
 from .db_second import init_db,  db, migrate
 from app.api.api_base import token_required
 import app.api.creating_api as postApi
 import app.api.deleting_api as deleteApi
 import app.api.updating_api as updateApi
-import app.api.endpoints as api
+import app.api.endpoints as API
 import app.api.get_api as getApi
-import jwt
+from datetime import datetime, timedelta
+
+
 
 
 def create_app():
@@ -84,7 +86,7 @@ def create_app():
     @app.route('/all_projects', methods=['GET'])
     @token_required
     def all_projects():
-        return api._all_projects_by_tg_id_or_user_id()
+        return API._all_projects_by_tg_id_or_user_id()
 
     # @app.route('/all_projects_by_tg_id/<secret_code>', methods=['GET'])
     # @token_required
@@ -95,8 +97,8 @@ def create_app():
     @app.route('/all_tasks', methods=['GET'])
     @token_required
     def all_tasks_by_user_id_or_tg_id():
-        return api._tasks()
-    
+        return API._tasks()
+
     # @app.route('/projects_by_head_id/<secret_code>', methods=['POST'])
     # @token_required
     # def projects_by_head_id(secret_code):
@@ -105,7 +107,7 @@ def create_app():
     @app.route('/sprints_by_project_id', methods=['GET'])
     @token_required
     def sprints_by_project_id():
-        return api._sprints_by_project_id()
+        return API._sprints_by_project_id()
 
     # @app.route('/tasks_by_sprint_id/<secret_code>', methods=['GET'])
     # @token_required
@@ -115,7 +117,7 @@ def create_app():
     @app.route('/users_in_project/<secret_code>', methods=['GET'])
     @token_required
     def users_in_project():
-        return api._users_in_project()
+        return API._users_in_project()
 
     @app.route('/add_user_to_project/<secret_code>', methods=['POST'])
     @token_required
