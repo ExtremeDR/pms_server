@@ -4,16 +4,13 @@ path = r"D:\\Programming\\NGROK\\ngrok.exe"
 
 from dotenv import load_dotenv
 
-# Укажите путь к вашему файлу .env
 dotenv_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(dotenv_path)
 
 class Config(object):
-    #code_for_API = "3i7r4ybfwbatro387"
-    #base_url = os.environ.get('base_url')
     code_for_API = os.environ.get('code_for_API')
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    #SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY= os.environ.get('SECRET_KEY')
 
 
 '''
