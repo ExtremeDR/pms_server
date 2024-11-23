@@ -132,7 +132,7 @@ def get_user_tasks():
         user_query = handler.execute_dynamic_query(fields=fields, filters=filters)
         user_id = user_query.scalar()
         if user_id:
-            params['user_id'] = user_id 
+            params['user_id'] = user_id
         else:
             return jsonify({'code':2000, 'data':"Hasn`t this tg"}), 404
 
@@ -188,23 +188,20 @@ def get_sprints():
         filters = [table.project_id == params["project_id"]]
 
         def map_results(results):
-            sprints = defaultdict(lambda: {"tasks": []})
+            sprints = []
             for row in results:
-                sprint = sprints[row.id]
-                sprint.update({
+                sprints.append({
                     "id": row.id,
                     "start_date": row.start_date,
                     "end_date": row.end_date,
-                    "status": row.status,
-                    "project_id": row.project_id
+                    "status": row.status
                 })
-            return list(sprints.values())
+            return sprints
 
         res = handler.execute_dynamic_query(table, fields, filters, [], map_results)
         return jsonify(handler.answer(True, res, 1001)), 200
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
-
 
 def check_user_exists(data):
     filters = [
@@ -215,15 +212,15 @@ def check_user_exists(data):
     ]
     result = handler.execute_dynamic_query(
         table=Users,
-        fields=[Users], 
+        fields=[Users],
         filters=filters
     )
-    return bool(result)
+    return result.first() is not None
 
 def _add_user():
     data = request.json
-    if not handler.check_data("login","password","email",data = data):
-        return jsonify(handler.answer(False,"Missing parametr", 2000)),400
+    if handler.check_data("login","password","email",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)", 'youre data':data}, 2000)),400
     if check_user_exists(data):
         return jsonify(handler.answer(False,"User already exists", 2000)),400
 

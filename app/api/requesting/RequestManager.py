@@ -3,7 +3,7 @@ from sqlalchemy import select
 class Request():
     def __init__(self, db) -> None:
         self.db =db
-    
+
     def get_params(*params, request):
         """
         Получает указанные параметры из request.args.
@@ -14,7 +14,7 @@ class Request():
         result = {param: request.args.get(param) for param in params}
         return result
 
-    def check_data(*params, data):
+    def check_data(*params:str, data:dict):
         """
         Проверяет наличие всех переданных параметров в словаре data.
 
@@ -22,7 +22,10 @@ class Request():
         :param data: Словарь данных, в котором проверяются параметры.
         :return: True, если все параметры есть в data, иначе False.
         """
-        return all(param in data for param in params)
+        for param in params:
+            if param not in data:  # Проверка наличия параметра в data
+                return False
+        return True
 
     def execute_dynamic_query(self, table, fields, filters=None, joins=None, result_mapper=None):
         """

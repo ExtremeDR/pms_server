@@ -31,7 +31,7 @@ def create_app():
     @app.route('/add-user', methods=['POST'])
     @token_required
     def add_user():
-        return postApi._add_user()
+        return API._add_user()
 
     @app.route('/generate-code', methods=['POST'])
     @token_required
@@ -107,7 +107,7 @@ def create_app():
     @app.route('/sprints_by_project_id', methods=['GET'])
     @token_required
     def sprints_by_project_id():
-        return API._sprints_by_project_id()
+        return API.get_sprints()
 
     # @app.route('/tasks_by_sprint_id/<>', methods=['GET'])
     # @token_required
