@@ -2,15 +2,15 @@ import abc
 
 from sqlalchemy import select
 class IRequest(abc.ABC):
-    @abs.abstractmethod
+    @abc.abstractmethod
     def get_data():
         pass
     
-    @abs.abstractmethod
+    @abc.abstractmethod
     def query():
         pass
     
-    @abs.abstractmethod
+    @abc.abstractmethod
     def answer():
         pass
 
