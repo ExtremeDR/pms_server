@@ -1,4 +1,4 @@
-from flask import make_response, request, jsonify
+from flask import request, jsonify
 from app.api.query_manager import QueryManager
 from app.api.requesting.RequestManager import GetRequest
 from app.config import Config as config
@@ -9,6 +9,7 @@ from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tag
 from datetime import datetime, timedelta
 from app.api.api_base import APIClient
 import traceback
+from collections import defaultdict
 api = APIClient(db,config)
 qm = QueryManager(api)
 
@@ -120,7 +121,7 @@ def _sprints_by_project_id():
 #################################################################
 
 def get_user_tasks():
-    handler = GetRequest()
+    handler = GetRequest(db)
     params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
     tg_id = params.get('tg_id')
     if tg_id:
@@ -132,36 +133,38 @@ def get_user_tasks():
             params['user_id'] = user_id  # Добавляем user_id в результат
         else:
             return jsonify({'code':2000, 'data':"Hasn`t this tg"}), 404
-        
+
     table = Tasks
-    
+
     fields = [
-        table.c.id, table.c.task_name, table.c.description,
-        table.c.set_time, table.c.end_time, table.c.status,
-        table.c.user_id, table.c.sprint_id,
-        Tags.c.id.label("tag_id"), Tags.c.tag_name.label("tag_name"),
+        table.id, table.task_name, table.description,
+        table.set_time, table.end_time, table.status,
+        table.user_id, table.sprint_id,
+        Tags.id.label("tag_id"), Tags.tag_name.label("tag_name"),
     ]
 
     joins = [
-        (task_tags, task_tags.c.task_id == table.c.id, True),
-        (Tags, Tags.c.id == task_tags.c.tag_id, True)
+        (task_tags, task_tags.c.task_id == table.id, True),
+        (Tags, Tags.id == task_tags.c.tag_id, True)
     ]
 
     filters = []
     if params.get("user_id"):
-        filters.append(table.c.user_id == params["user_id"])
+        filters.append(table.user_id == params["user_id"])
     if params.get("sprint_id"):
-        filters.append(table.c.sprint_id == params["sprint_id"])
+        filters.append(table.sprint_id == params["sprint_id"])
 
     def map_results(results):
-        return [
-            {
+        tasks = defaultdict(lambda: {"tags": []})
+        for row in results:
+            task = tasks[row.id]
+            task.update({
                 "id": row.id,
                 "task_name": row.task_name,
-                "description": row.description,
-                "tag": {"id": row.tag_id, "name": row.tag_name},
-            }
-            for row in results
-        ]
-
-    return jsonify(handler.answer(True,handler.execute_dynamic_query(table, fields, filters, joins, map_results, 1001))),200
+                "description": row.description
+            })
+            if row.tag_id:
+                task["tags"].append({"id": row.tag_id, "name": row.tag_name})
+        return list(tasks.values())
+    res = handler.execute_dynamic_query(table, fields, filters, joins, map_results)
+    return jsonify(handler.answer(True,res, 1001)),200

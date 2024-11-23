@@ -3,20 +3,21 @@ import abc
 from sqlalchemy import select
 class IRequest(abc.ABC):
     @abc.abstractmethod
-    def get_data():
+    def get_params():
         pass
-    
+
     @abc.abstractmethod
-    def query():
+    def execute_dynamic_query():
         pass
-    
+
     @abc.abstractmethod
     def answer():
         pass
 
 class GetRequest(IRequest):
-    def __init__(self) -> None:
+    def __init__(self, db) -> None:
         super().__init__()
+        self.db = db
     def get_params(*params, request):
         """
         Получает указанные параметры из request.args.
@@ -48,13 +49,13 @@ class GetRequest(IRequest):
                 query = query.where(condition)
 
         # Выполнение запроса
-        results = self.api.execute_query(query)
+        results = self.db.session.execute(query)
 
         # Преобразование результата
         if result_mapper:
             return result_mapper(results)
 
         return results
-    
-    def answer(good:bool, data, code:int):
+
+    def answer(self,good:bool, data, code:int):
         return {'Success' : good, 'data':data, 'code':code}

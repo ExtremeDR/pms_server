@@ -97,7 +97,7 @@ def create_app():
     @app.route('/all_tasks', methods=['GET'])
     @token_required
     def all_tasks_by_user_id_or_tg_id():
-        return API._tasks()
+        return API.get_user_tasks()
 
     # @app.route('/projects_by_head_id/<>', methods=['POST'])
     # @token_required
