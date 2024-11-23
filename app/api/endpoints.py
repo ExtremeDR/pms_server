@@ -1,5 +1,6 @@
 from flask import make_response, request, jsonify
 from app.api.query_manager import QueryManager
+from app.api.requesting.RequestManager import GetRequest
 from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, select,delete
@@ -62,7 +63,7 @@ def _tasks():
         TASKS = qm.get_tasks(params)
         return api.to_json(TASKS)
     except Exception as e:
-        return jsonify({'code': 2,"data": str(e) }), 500
+        return jsonify({'code': 2000,"data": str(e) }), 500
 
 def _users_in_project():
     param = api.get_params('project_id', request=request)
@@ -84,7 +85,6 @@ def _users_in_project():
     except:
         return jsonify({"data": traceback.format_exc(), 'code': 2000}), 500
 
-# Функция для выполнения запроса спринтов по project_id
 def get_sprints_by_project_id(project_id):
     return api.execute_query(
         select(Sprints.id.label('id'),
@@ -93,8 +93,6 @@ def get_sprints_by_project_id(project_id):
                Sprints.status.label('status'))
         .where(Sprints.project_id == project_id)
     )
-
-# Функция для обработки данных спринтов
 def format_sprints_data(sprints):
     return [{
         "id": sprint.id,
@@ -103,7 +101,6 @@ def format_sprints_data(sprints):
         "status": sprint.status
     } for sprint in sprints]
 
-# Главная функция обработчик
 def _sprints_by_project_id():
     param = api.get_params('project_id', request=request)
     project_id = param.get('project_id')
@@ -116,21 +113,55 @@ def _sprints_by_project_id():
         sprints_data = format_sprints_data(sprints) if sprints else []
         return api.to_json(sprints_data)
     except Exception as e:
-        # Логирование и обработка ошибок
         return jsonify({"data": str(e), 'code': 2000}), 500
 
+#################################################################
+###################       New API          ######################
+#################################################################
 
-def _sprints_by_project_i():
-    param = api.get_params('project_id', request=request)
+def get_user_tasks():
+    handler = GetRequest()
+    params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
+    tg_id = params.get('tg_id')
+    if tg_id:
+        fields = [Users_tg.c.user_id]
+        filters = [Users_tg.c.tg_id == tg_id]
+        user_query = handler.execute_dynamic_query(fields=fields, filters=filters)
+        user_id = user_query.scalar()  # Получаем user_id как одиночное значение
+        if user_id:
+            params['user_id'] = user_id  # Добавляем user_id в результат
+        else:
+            return jsonify({'code':2000, 'data':"Hasn`t this tg"}), 404
+        
+    table = Tasks
+    
+    fields = [
+        table.c.id, table.c.task_name, table.c.description,
+        table.c.set_time, table.c.end_time, table.c.status,
+        table.c.user_id, table.c.sprint_id,
+        Tags.c.id.label("tag_id"), Tags.c.tag_name.label("tag_name"),
+    ]
 
-    try:
-        sprints = api.execute_query(
-            select(Sprints.id.label('id'),Sprints.start_date.label('start_date'), Sprints.end_date.label('end_date'),Sprints.status.label('status'))
-            .where(Sprints.project_id == param['project_id'])
-        )
-        sprints_data = []
-        if sprints:
-            sprints_data = [{"id": sprint.id, "start_date": sprint.start_date, "end_date": sprint.end_date, "status":sprint.status} for sprint in sprints]
-        return api.to_json(sprints_data)
-    except:
-        return jsonify({"data": traceback.format_exc(), 'code': 2000}), 500
+    joins = [
+        (task_tags, task_tags.c.task_id == table.c.id, True),
+        (Tags, Tags.c.id == task_tags.c.tag_id, True)
+    ]
+
+    filters = []
+    if params.get("user_id"):
+        filters.append(table.c.user_id == params["user_id"])
+    if params.get("sprint_id"):
+        filters.append(table.c.sprint_id == params["sprint_id"])
+
+    def map_results(results):
+        return [
+            {
+                "id": row.id,
+                "task_name": row.task_name,
+                "description": row.description,
+                "tag": {"id": row.tag_id, "name": row.tag_name},
+            }
+            for row in results
+        ]
+
+    return jsonify(handler.answer(True,handler.execute_dynamic_query(table, fields, filters, joins, map_results, 1001))),200
