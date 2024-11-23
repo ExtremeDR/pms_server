@@ -1,23 +1,9 @@
-import abc
-
 from sqlalchemy import select
-class IRequest(abc.ABC):
-    @abc.abstractmethod
-    def get_params():
-        pass
 
-    @abc.abstractmethod
-    def execute_dynamic_query():
-        pass
-
-    @abc.abstractmethod
-    def answer():
-        pass
-
-class GetRequest(IRequest):
+class Request():
     def __init__(self, db) -> None:
-        super().__init__()
-        self.db = db
+        self.db =db
+    
     def get_params(*params, request):
         """
         Получает указанные параметры из request.args.
@@ -27,6 +13,17 @@ class GetRequest(IRequest):
         """
         result = {param: request.args.get(param) for param in params}
         return result
+
+    def check_data(*params, data):
+        """
+        Проверяет наличие всех переданных параметров в словаре data.
+
+        :param params: Параметры, которые нужно проверить.
+        :param data: Словарь данных, в котором проверяются параметры.
+        :return: True, если все параметры есть в data, иначе False.
+        """
+        return all(param in data for param in params)
+
     def execute_dynamic_query(self, table, fields, filters=None, joins=None, result_mapper=None):
         """
         Выполняет запрос к базе данных с параметрами:
@@ -38,20 +35,16 @@ class GetRequest(IRequest):
         """
         query = select(*fields)
 
-        # Добавление таблицы
         if joins:
             for join_table, condition, is_outer in joins:
                 query = query.join(join_table, condition, isouter=is_outer)
 
-        # Применение фильтров
         if filters:
             for condition in filters:
                 query = query.where(condition)
 
-        # Выполнение запроса
         results = self.db.session.execute(query)
 
-        # Преобразование результата
         if result_mapper:
             return result_mapper(results)
 
@@ -59,3 +52,29 @@ class GetRequest(IRequest):
 
     def answer(self,good:bool, data, code:int):
         return {'Success' : good, 'data':data, 'code':code}
+
+# class GetRequest(Request):
+#     def __init__(self, db) -> None:
+#         super().__init__(db)
+#     def get_params(*params, request):
+#         """
+#         Получает указанные параметры из request.args.
+
+#         :param params: Имена параметров, которые нужно получить.
+#         :return: Словарь с указанными параметрами и их значениями.
+#         """
+#         result = {param: request.args.get(param) for param in params}
+#         return result
+
+# class PostRequest(Request):
+#     def __init__(self, db) -> None:
+#         super().__init__(db)
+#     def get_params(*params, request):
+#         """
+#         Получает указанные параметры из request.args.
+
+#         :param params: Имена параметров, которые нужно получить.
+#         :return: Словарь с указанными параметрами и их значениями.
+#         """
+#         result = {param: (request.json).get(param) for param in params}
+#         return result

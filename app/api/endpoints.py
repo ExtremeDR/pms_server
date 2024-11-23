@@ -1,9 +1,9 @@
 from flask import request, jsonify
 from app.api.query_manager import QueryManager
-from app.api.requesting.RequestManager import GetRequest
+from app.api.requesting.RequestManager import Request
 from app.config import Config as config
 from werkzeug.security import generate_password_hash
-from sqlalchemy import case, select,delete
+from sqlalchemy import case, or_, select,delete
 #from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
@@ -119,18 +119,20 @@ def _sprints_by_project_id():
 #################################################################
 ###################       New API          ######################
 #################################################################
+handler = Request(db)
+# get_hdl = GetRequest(db)
+# get_hdl = GetRequest(db)
 
 def get_user_tasks():
-    handler = GetRequest(db)
-    params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
+    params = handler.get_params('user_id', 'sprint_id', 'tg_id', request=request)
     tg_id = params.get('tg_id')
     if tg_id:
         fields = [Users_tg.c.user_id]
         filters = [Users_tg.c.tg_id == tg_id]
         user_query = handler.execute_dynamic_query(fields=fields, filters=filters)
-        user_id = user_query.scalar()  # Получаем user_id как одиночное значение
+        user_id = user_query.scalar()
         if user_id:
-            params['user_id'] = user_id  # Добавляем user_id в результат
+            params['user_id'] = user_id 
         else:
             return jsonify({'code':2000, 'data':"Hasn`t this tg"}), 404
 
@@ -168,3 +170,69 @@ def get_user_tasks():
         return list(tasks.values())
     res = handler.execute_dynamic_query(table, fields, filters, joins, map_results)
     return jsonify(handler.answer(True,res, 1001)),200
+
+def get_sprints():
+    params = handler.get_params('project_id', request=request)
+    project_id = params.get('project_id')
+
+    if not project_id:
+        return jsonify({"error": "Project ID is required", "code": 400}), 400
+
+    try:
+        table = Sprints
+        fields = [
+            table.id, table.start_date, table.end_date, table.status,
+            table.project_id
+        ]
+
+        filters = [table.project_id == params["project_id"]]
+
+        def map_results(results):
+            sprints = defaultdict(lambda: {"tasks": []})
+            for row in results:
+                sprint = sprints[row.id]
+                sprint.update({
+                    "id": row.id,
+                    "start_date": row.start_date,
+                    "end_date": row.end_date,
+                    "status": row.status,
+                    "project_id": row.project_id
+                })
+            return list(sprints.values())
+
+        res = handler.execute_dynamic_query(table, fields, filters, [], map_results)
+        return jsonify(handler.answer(True, res, 1001)), 200
+    except Exception as e:
+        return jsonify({"data": str(e), 'code': 2000}), 500
+
+
+def check_user_exists(data):
+    filters = [
+        or_(
+            Users.login == data.get("login"),
+            Users.email == data.get("email")
+        )
+    ]
+    result = handler.execute_dynamic_query(
+        table=Users,
+        fields=[Users], 
+        filters=filters
+    )
+    return bool(result)
+
+def _add_user():
+    data = request.json
+    if not handler.check_data("login","password","email",data = data):
+        return jsonify(handler.answer(False,"Missing parametr", 2000)),400
+    if check_user_exists(data):
+        return jsonify(handler.answer(False,"User already exists", 2000)),400
+
+    new_user = Users(
+        login=data.get("login"),
+        password_hash=generate_password_hash(data.get('password')),
+        email=data.get("email")
+    )
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'success': True, 'code': 1001}), 201
