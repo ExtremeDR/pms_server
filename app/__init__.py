@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request,jsonify
 from .config import Config
 from .db_second import init_db,  db, migrate
-from app.api.api_base import token_required
+from app.api.werification_token import token_required
 import app.api.creating_api as postApi
 import app.api.deleting_api as deleteApi
 import app.api.updating_api as updateApi
@@ -31,103 +31,94 @@ def create_app():
     @app.route('/add-user', methods=['POST'])
     @token_required
     def add_user():
-        return API._add_user()
+        return API.add_user()
 
     @app.route('/generate-code', methods=['POST'])
     @token_required
     def gen():
-        return postApi._gen()
+        return API.gen()
 
     @app.route('/add-tg-user', methods=['POST'])
     @token_required
     def add_tg_user():
-        return postApi._add_tg_user()
+        return API.add_tg_user()
 
     @app.route('/is-user-exists', methods=['POST'])
     @token_required
     def is_user_exists():
-        return getApi._is_user_exists()
+        return API.is_user_exists()
 
-    @app.route('/check_telegram_id', methods=['POST'])
+    @app.route('/check_telegram_id', methods=['GET'])
     @token_required
     def check_telegram_id():
-        return getApi._check_telegram_id()
+        return API.check_telegram_id()
 
     @app.route('/create_project', methods=['POST'])
     @token_required
     def create_project():
-        return postApi._create_project()
+        return API.create_project()
 
     @app.route('/create_task', methods=['POST'])
     @token_required
     def create_task():
-        return postApi._create_task()
+        return API.create_task()
 
-    @app.route('/change_task_status', methods=['PATCH'])
+    @app.route('/change_task_status', methods=['PATCH', 'GET'])
     @token_required
     def change_task_status():
-        return updateApi._change_task_status()
+        return API.change_task_status()
+
+    @app.route('/change_project_status_and_sprints', methods=['PATCH', 'GET'])
+    @token_required
+    def change_project_status_and_sprints():
+        return API.change_project_status_and_sprints()
+
+    @app.route('/change_sprint_status', methods=['PATCH', 'GET'])
+    @token_required
+    def change_sprint_status():
+        return API.change_sprint_status()
 
     @app.route('/create_sprint', methods=['POST'])
     @token_required
     def create_sprint():
-        return postApi._create_sprint()
+        return API.create_sprint()
 
     @app.route('/create_tag', methods=['POST'])
     @token_required
     def create_tag():
-        return postApi._create_tag()
-
-    @app.route('/create_task_from_other_task', methods=['POST'])
-    @token_required
-    def create_task_from_other_task():
-        return postApi._create_task_from_other_task()
+        return API.create_tag()
 
     @app.route('/all_projects', methods=['GET'])
     @token_required
     def all_projects():
-        return API._all_projects_by_tg_id_or_user_id()
-
-    # @app.route('/all_projects_by_tg_id/<secret_code>', methods=['GET'])
-    # @token_required
-    # def all_projects_by_tg_id(secret_code):
-    #     params = request.args.get('user_id','tg_id')
-    #     return getApi._all_projects_by_tg_id(secret_code)
+        return API.get_projects_by_user_id()
 
     @app.route('/all_tasks', methods=['GET'])
     @token_required
     def all_tasks_by_user_id_or_tg_id():
         return API.get_user_tasks()
 
-    # @app.route('/projects_by_head_id/<>', methods=['POST'])
-    # @token_required
-    # def projects_by_head_id():
-    #     return getApi._projects_by_head_id()
-
     @app.route('/sprints_by_project_id', methods=['GET'])
     @token_required
     def sprints_by_project_id():
         return API.get_sprints()
 
-    # @app.route('/tasks_by_sprint_id/<>', methods=['GET'])
-    # @token_required
-    # def tasks_by_sprint_id():
-    #     return getApi._tasks_by_sprint_id()
-
-    @app.route('/users_in_project', methods=['GET'])
-    @token_required
-    def users_in_project():
-        return API._users_in_project()
+    # # @app.route('/users_in_project', methods=['GET'])
+    # # @token_required
+    # # def users_in_project():
+    # #     return API.users_in_project()
 
     @app.route('/add_user_to_project', methods=['POST'])
     @token_required
     def add_user_to_project():
-        return postApi._add_user_to_project()
+        return API.add_user_to_project()
 
     @app.route('/delete_user_from_project', methods=['DELETE'])
     @token_required
     def delete_user_from_project():
-        return deleteApi._delete_user_from_project()
+        return API.delete_user_from_project()
+    
+    
     return app
 
 # if __name__ == '__main__':

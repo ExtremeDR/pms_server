@@ -27,10 +27,9 @@ class Request():
                 return False
         return True
 
-    def execute_dynamic_query(self, table, fields, filters=None, joins=None, result_mapper=None):
+    def execute_dynamic_query(self, fields, filters=None, joins=None, result_mapper=None):
         """
         Выполняет запрос к базе данных с параметрами:
-        - table: таблица, с которой идет запрос.
         - fields: список полей для выборки.
         - filters: список фильтров (опционально).
         - joins: список джойнов (опционально).
@@ -55,29 +54,3 @@ class Request():
 
     def answer(self,good:bool, data, code:int):
         return {'Success' : good, 'data':data, 'code':code}
-
-# class GetRequest(Request):
-#     def __init__(self, db) -> None:
-#         super().__init__(db)
-#     def get_params(*params, request):
-#         """
-#         Получает указанные параметры из request.args.
-
-#         :param params: Имена параметров, которые нужно получить.
-#         :return: Словарь с указанными параметрами и их значениями.
-#         """
-#         result = {param: request.args.get(param) for param in params}
-#         return result
-
-# class PostRequest(Request):
-#     def __init__(self, db) -> None:
-#         super().__init__(db)
-#     def get_params(*params, request):
-#         """
-#         Получает указанные параметры из request.args.
-
-#         :param params: Имена параметров, которые нужно получить.
-#         :return: Словарь с указанными параметрами и их значениями.
-#         """
-#         result = {param: (request.json).get(param) for param in params}
-#         return result

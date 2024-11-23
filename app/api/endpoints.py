@@ -1,140 +1,90 @@
 from flask import request, jsonify
-from app.api.query_manager import QueryManager
 from app.api.requesting.RequestManager import Request
 from app.config import Config as config
 from werkzeug.security import generate_password_hash
 from sqlalchemy import case, or_, select,delete
-#from db import init_db, Users_tg, Users, TMP_code,  db
 from app.db_second import db,TMP_code,Users_tg,Users,Projects,Sprints, Tasks,Tags, project_user,task_tags
 from datetime import datetime, timedelta
-from app.api.api_base import APIClient
+from app.api.werification_token import APIClient
 import traceback
 from collections import defaultdict
 api = APIClient(db,config)
-qm = QueryManager(api)
-
-
-def _all_projects_by_tg_id_or_user_id():
-    params = api.get_params('user_id', 'tg_id', request=request)
-    if params.get('tg_id'):
-            params['user_id'] = qm.get_user_id(params.get('tg_id'))
-    try:
-        projects_as_head = api.execute_query(
-            select(Projects.id.label('id'), Projects.title.label('title'), Projects.description.label('description'))
-            .where(Projects.head_id == params['user_id'])
-        )
-
-        projects_as_member = api.execute_query(
-            select(Projects.id.label('id'), Projects.title.label('title'), Projects.description.label('description'))
-            .join(project_user, project_user.c.project_id == Projects.id)
-            .where(project_user.c.user_id == params['user_id'])
-        )
-        projects = []
-        projects2 = []
-        if projects_as_head or projects_as_member:
-            if len(projects_as_head) > 0 or len(projects_as_member) > 0:
-                projects = [
-                    {
-                        "id": project.id,
-                        "title": project.title,
-                        "description": project.description,
-                        "role": True
-                    }
-                    for project in projects_as_head
-                ]
-                projects2 = [
-                    {
-                        "id": project.id,
-                        "title": project.title,
-                        "description": project.description,
-                        "role": False
-                    }
-                    for project in projects_as_member
-                ]
-        return api.to_json(projects+projects2)
-    except Exception as e:
-        return jsonify({'code': 2000,"data": str(e)}), 500
-
-def _tasks():
-    params = api.get_params('user_id', 'sprint_id', 'tg_id', request=request)
-    # Проверка, чтобы не передавалось несколько параметров одновременно
-    if sum(1 for v in params.values() if v is not None) > 1:
-        return jsonify({"error": "Please provide only one of 'user_id', 'sprint_id', or 'tg_id'."}), 400
-    try:
-        TASKS = qm.get_tasks(params)
-        return api.to_json(TASKS)
-    except Exception as e:
-        return jsonify({'code': 2000,"data": str(e) }), 500
-
-def _users_in_project():
-    param = api.get_params('project_id', request=request)
-
-    try:
-        users = api.execute_query(
-            select(Users.id.label('id'),Users.email.label('email'),Users.login.label('login'))
-            .join(project_user, project_user.c.user_id == Users.id)
-            .where(project_user.c.project_id == param['project_id'])
-        )
-
-        users_data = []
-
-        if users:
-            users_data = [{"id": user.id, "login": user.login, "email": user.email} for user in users]
-
-        return api.to_json(users_data)
-
-    except:
-        return jsonify({"data": traceback.format_exc(), 'code': 2000}), 500
-
-def get_sprints_by_project_id(project_id):
-    return api.execute_query(
-        select(Sprints.id.label('id'),
-               Sprints.start_date.label('start_date'),
-               Sprints.end_date.label('end_date'),
-               Sprints.status.label('status'))
-        .where(Sprints.project_id == project_id)
-    )
-def format_sprints_data(sprints):
-    return [{
-        "id": sprint.id,
-        "start_date": sprint.start_date,
-        "end_date": sprint.end_date,
-        "status": sprint.status
-    } for sprint in sprints]
-
-def _sprints_by_project_id():
-    param = api.get_params('project_id', request=request)
-    project_id = param.get('project_id')
-
-    if not project_id:
-        return jsonify({"error": "Project ID is required", "code": 400}), 400
-
-    try:
-        sprints = get_sprints_by_project_id(project_id)
-        sprints_data = format_sprints_data(sprints) if sprints else []
-        return api.to_json(sprints_data)
-    except Exception as e:
-        return jsonify({"data": str(e), 'code': 2000}), 500
 
 #################################################################
-###################       New API          ######################
+###################      Functions    ###########################
 #################################################################
 handler = Request(db)
-# get_hdl = GetRequest(db)
-# get_hdl = GetRequest(db)
+
+def user_id_from_tg_id(tg_id) -> int:
+    fields = [Users_tg.c.user_id]
+    filters = [Users_tg.c.tg_id == tg_id]
+    user_query = handler.execute_dynamic_query(fields=fields, filters=filters)
+    user_id = user_query.scalar()
+    return user_id
+
+def exists(table, filters):
+    result = handler.execute_dynamic_query(
+        fields=[table],
+        filters=filters
+    )
+    return result.first() is not None
+
+#################################################################
+#####################       API      ############################
+#################################################################
+
+def get_projects_by_user_id():
+    params = handler.get_params('user_id', 'tg_id', request=request)
+    tg_id = params.get('tg_id')
+    if tg_id and (user_id := user_id_from_tg_id(tg_id)):
+        params['user_id'] = user_id
+    else:
+        return jsonify({'code': 2000, 'data': "Hasn’t this tg"}), 404
+    
+    table = Projects
+
+    fields = [
+        table.id, table.title, table.description,table.status, table.start_date,
+    ]
+
+    joins = [
+        (project_user, project_user.c.project_id == table.id, True)
+    ]
+
+    filters = [
+        or_(
+            table.head_id == params['user_id'],
+            project_user.c.user_id == params['user_id']
+        )
+    ]
+
+    def map_results(results):
+        projects = []
+        for row in results:
+            project = {
+                "id": row.id,
+                "title": row.title,
+                "status": row.status,
+                "description": row.description,
+                "start_date": row.start_date,
+                "role": row.head_id == params['user_id']  # Если user_id является head, то роль True
+            }
+            projects.append(project)
+        return projects
+
+    try: 
+        res = handler.execute_dynamic_query(fields=fields,filters= filters,joins= joins,result_mapper= map_results)
+        return jsonify(handler.answer(True, res, 1001)), 200
+    except:
+        return jsonify(handler.answer(False, "Error", 2000)), 500
 
 def get_user_tasks():
     params = handler.get_params('user_id', 'sprint_id', 'tg_id', request=request)
     tg_id = params.get('tg_id')
-    if tg_id:
-        fields = [Users_tg.c.user_id]
-        filters = [Users_tg.c.tg_id == tg_id]
-        user_query = handler.execute_dynamic_query(fields=fields, filters=filters)
-        user_id = user_query.scalar()
-        if user_id:
-            params['user_id'] = user_id
-        else:
-            return jsonify({'code':2000, 'data':"Hasn`t this tg"}), 404
+    if tg_id and (user_id := user_id_from_tg_id(tg_id)):
+        params['user_id'] = user_id
+    else:
+        return jsonify({'code': 2000, 'data': "Hasn’t this tg"}), 404
 
     table = Tasks
 
@@ -168,15 +118,16 @@ def get_user_tasks():
             if row.tag_id:
                 task["tags"].append({"id": row.tag_id, "name": row.tag_name})
         return list(tasks.values())
-    res = handler.execute_dynamic_query(table, fields, filters, joins, map_results)
-    return jsonify(handler.answer(True,res, 1001)),200
+    try:
+        res = handler.execute_dynamic_query(fields=fields, filters=filters, joins=joins, result_mapper=map_results)
+        return jsonify(handler.answer(True,res, 1001)),200
+    except:
+        return jsonify(handler.answer(False,"Error", 2000)),500
 
 def get_sprints():
     params = handler.get_params('project_id', request=request)
-    project_id = params.get('project_id')
-
-    if not project_id:
-        return jsonify({"error": "Project ID is required", "code": 400}), 400
+    if handler.check_data("project_id",data = params):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
 
     try:
         table = Sprints
@@ -198,30 +149,22 @@ def get_sprints():
                 })
             return sprints
 
-        res = handler.execute_dynamic_query(table, fields, filters, [], map_results)
+        res = handler.execute_dynamic_query(fields=fields,filters= filters, result_mapper=map_results)
         return jsonify(handler.answer(True, res, 1001)), 200
     except Exception as e:
         return jsonify({"data": str(e), 'code': 2000}), 500
 
-def check_user_exists(data):
+def add_user():
+    data = request.json
+    if handler.check_data("login","password","email",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
     filters = [
         or_(
             Users.login == data.get("login"),
             Users.email == data.get("email")
         )
     ]
-    result = handler.execute_dynamic_query(
-        table=Users,
-        fields=[Users],
-        filters=filters
-    )
-    return result.first() is not None
-
-def _add_user():
-    data = request.json
-    if handler.check_data("login","password","email",data = data):
-        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)", 'youre data':data}, 2000)),400
-    if check_user_exists(data):
+    if exists(Users,filters):
         return jsonify(handler.answer(False,"User already exists", 2000)),400
 
     new_user = Users(
@@ -229,7 +172,325 @@ def _add_user():
         password_hash=generate_password_hash(data.get('password')),
         email=data.get("email")
     )
-    db.session.add(new_user)
-    db.session.commit()
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'success': True, 'code': 1001}), 201
+    except:
+        return jsonify(handler.answer(False, "Error", 2000)), 500
+        
 
-    return jsonify({'success': True, 'code': 1001}), 201
+def gen():
+    data = request.json
+    if handler.check_data("user_id","uniqueCode",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    
+    filters = [
+            TMP_code.user_id == data.get("user_id"),
+    ]
+    if exists(TMP_code,filters):
+        return jsonify(handler.answer(False,{'mess':"Code already getted"}, 2000)),400
+    
+    new_tmp_code = TMP_code(
+        user_id=data.get('user_id'),
+        unic_code=data.get('uniqueCode')
+    )
+    try:
+        db.session.add(new_tmp_code)
+        db.session.commit()
+        return jsonify(handler.answer(True, [], 1001)), 200
+    except Exception as e:
+        db.session.rollback()  # Откатываем изменения в случае ошибки
+        return jsonify(handler.answer(False, "Error", 2000)), 500
+    
+def add_tg_user():
+    data = request.json
+    if handler.check_data("user_id","uniqueCode",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    code = data.get("uniqueCode")
+    tg_id = data.get("tg_id")
+
+    is_code_exists = handler.execute_dynamic_query(
+        fields=[TMP_code],
+        filters=[TMP_code.unic_code == code]
+    ).scalars().first()
+    if not is_code_exists:
+        return jsonify(handler.answer(False,{'mess':"Code not found"}, 2000)),404
+    
+    user_id = is_code_exists.user_id
+    
+    new_user_tg = Users_tg(
+        user_id=user_id,
+        user_tg_id=tg_id
+    )
+
+    try:
+        db.session.delete(is_code_exists)
+        db.session.add(new_user_tg)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()  # Откатываем изменения в случае ошибки
+        return jsonify(handler.answer(False,{'mess':"Error", 'Error:':str(e)}, 2000)),500
+    
+def create_project():
+    data = request.json
+    if handler.check_data("user_id","project_title","project_description",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    
+    new_project = Projects(
+        title=data.get("project_title"),
+        head_id=data.get("user_id"),
+        description=data.get("project_description"),
+        start_date= datetime.now()+ timedelta(hours=3),
+        status= 1,
+    )
+
+    try:
+        db.session.add(new_project)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        return jsonify(handler.answer(False,{'mess':"Error", 'Error:':str(e)}, 2000)),500
+    
+def create_sprint():
+    data = request.json
+    if handler.check_data("project_id","sprint_duration",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    new_sprint = Sprints(
+        start_date=datetime.now()+ timedelta(hours=3),
+        status=1,
+        end_date=datetime.now()+ timedelta(hours=3) + timedelta(days=data.get("sprint_duration")),
+        project_id=data.get("project_id")
+    )
+    try:
+        db.session.add(new_sprint)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        return jsonify(handler.answer(False,{'mess':"Error", 'Error:':str(e)}, 2000)),500
+    
+def create_tag():
+    data = request.json
+    if handler.check_data("description","tag_name",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    new_tag = Tags(
+        description= data.get("description"),
+        tag_name=data.get("tag_name")
+    )
+    try:
+        db.session.add(new_tag)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        return jsonify(handler.answer(False,{'mess':"Error", 'Error:':str(e)}, 2000)),500
+    
+def create_task():
+    data = request.json
+    if handler.check_data("user_id","task_description","name",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    is_have_duration = handler.check_data("task_duration",data = data)
+    is_have_tags = handler.check_data("tags_ids",data = data)
+    is_have_sprint = handler.check_data("sprint_id",data = data)
+    if not is_have_duration and is_have_sprint:
+        data.append({'task_duration':
+            handler.execute_dynamic_query(
+                fields=[Sprints.end_date], 
+                filters=[Sprints.id == data.get("sprint_id")]
+                ).scalars().first()})
+    elif not is_have_duration and not is_have_sprint:
+        return jsonify(handler.answer(False, "error, need sprint_id or task_duration", 2000)),404
+    new_task = Tasks(
+        description=data.get("task_description"),
+        task_name=data.get("name"),
+        status = 1,
+        set_time=datetime.now()+ timedelta(hours=3),
+        end_time=datetime.now()+ timedelta(hours=3) + timedelta(days=data.get("task_duration")),
+        user_id=data.get("user_id"),
+        sprint_id=data.get('sprint_id') if is_have_sprint else None
+    )
+    if is_have_tags:
+        tags = handler.execute_dynamic_query(
+            fields=Tags, filters=[Tags.id.in_(data.get("tags_ids"))]
+        ).scalars().all()
+        if not tags:
+            return jsonify(handler.answer(False, "error, wrong tags", 2000)),404
+        for tag in tags:
+            new_task.tags.append(tag)  # Добавляем тег в задачу
+    try:
+        db.session.add(new_task)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(handler.answer(False,{'mess':"Error", 'Error:':str(e)}, 2000)),500
+    
+def add_user_to_project():
+    data = request.json
+    if handler.check_data("user_id","project_id",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    
+    user = handler.execute_dynamic_query(
+        fields=[Users],
+        filters=[Users.id == data.get('user_id')]
+    ).scalars().first()
+    
+    if not user:
+        return jsonify(handler.answer(False, "error", 2009)),400
+
+    project = handler.execute_dynamic_query(
+        fields=[Projects],
+        filters=[Projects.id == data.get('project_id')]
+    ).scalars().first()
+    
+    if not project:
+        return jsonify(handler.answer(False, "error", 2010)),400
+
+    existing_member = handler.execute_dynamic_query(
+        fields=[project_user],
+        filters=[
+            project_user.c.project_id == data.get('project_id'),
+            project_user.c.user_id == data.get('user_id')
+        ]
+    ).scalars().first()
+
+    if existing_member:
+        return jsonify({'success': False, 'code': 2011}), 400  # User already in project
+
+    try:
+        new_member = project_user.insert().values(project_id=data.get('project_id'), user_id=data.get('user_id'))
+        handler.db.session.execute(new_member)
+        handler.db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2011)),500
+    
+
+def is_user_exists():
+    data = request.json
+    if handler.check_data("login","password",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    user = handler.execute_dynamic_query(fields=[Users],filters=[Users.login == data.get("login")])
+    Users.check_password(user, data.get("password"))
+    return jsonify(
+        handler.answer(
+            Users.check_password(user, data.get("password")) if user else False,"Is_exists",1001
+            )
+        )
+
+def check_telegram_id():
+    params = handler.get_params('tg_id', request=request)
+    if handler.check_data("tg_id",data = params):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    return jsonify(
+        handler.answer(
+            exists(Users_tg,[Users_tg.user_tg_id == params.get("tg_id")])
+            )
+        )
+
+
+  
+def change_task_status():
+    params = handler.get_params('status',"task_id", request=request)
+    if handler.check_data('status',"task_id",data = params) and not isinstance(params.get("status"), int):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
+
+    task = db.session.query(Tasks).get(params.get("task_id"))
+
+    if not task:
+        jsonify(handler.answer(False, "error", 2000)),404
+    try:
+        task.status = params.get("status")
+        db.session.commit()  # Сохраняем изменения в базе данных
+    except:
+        return jsonify({'success': False, 'code': 2000}) # Error добавить
+    return jsonify({"success": True, "code": 1001}), 200
+
+def change_project_status_and_sprints():
+    params = handler.get_params('status',"task_id", request=request)
+    if handler.check_data('status',"task_id",data = params) and not isinstance(params.get("status"), int):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
+
+    project = handler.execute_dynamic_query(
+        fields=[Projects],
+        filters=[Projects.id == params.get('project_id')]
+        ).scalar_one_or_none()
+    if not project:
+        jsonify(handler.answer(False, "error", 2000)),404
+
+    try:
+        project.status = params.get('status')
+        sprints = handler.execute_dynamic_query(
+            fields=[Sprints],
+            filters=[Sprints.project_id == params.get('project_id'), Sprints.status == 1]
+            ).scalars().all()
+        for sprint in sprints:
+            sprint.status = 3  # Изменяем статус спринта на 3
+            tasks = handler.execute_dynamic_query(
+                fields=(Tasks), filters=(Tasks.sprint_id == sprint.id)
+                ).scalars().all()
+            for task in tasks:
+                if task.status != 2:  # Если статус задачи не равен 2
+                    task.status = 3  # Обновляем статус задачи на 3
+        db.session.commit()  # Сохраняем изменения в базе данных
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2000)),500
+
+def change_sprint_status():
+    params = handler.get_params('status',"sprint_id", request=request)
+    if handler.check_data('status',"task_id",data = params) and not isinstance(params.get("status"), int):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
+    
+    sprint = handler.execute_dynamic_query(
+        fields=(Sprints), filters=(Sprints.id == params.get('sprint_id'))
+        ).scalar_one_or_none()
+    if not sprint:
+        return jsonify(handler.answer(False,{'mess':"Dont have sprints with this id"}, 2000)),404
+    try:
+        sprint.status = params.get('status')
+        tasks = handler.execute_dynamic_query(
+            fields=(Tasks), filters=(Tasks.sprint_id == params.get('sprint_id'))
+            ).scalars().all()
+        for task in tasks:
+            if task.status != 2:  # Если статус задачи не равен 2
+                task.status = 3  # Обновляем статус задачи на 3
+        db.session.commit()  # Сохраняем изменения в базе данных
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2000)),500
+
+
+
+
+def delete_user_from_project():
+    data = request.json
+    if handler.check_data("user_to_delete_id","project_id",data = data):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+    user_to_delete_id = data.get("user_to_delete_id")
+    project_id = data.get("project_id")
+
+    pr_user = handler.execute_dynamic_query(
+        fields=(project_user),
+        filters=(
+            project_user.c.user_id == user_to_delete_id,
+            project_user.c.project_id == project_id
+        )
+    ).scalars().first()
+    if not pr_user:
+        return jsonify(handler.answer(False,{'mess':"havent this user in project"}, 2000)),404
+
+    try:
+        delete_query = delete(project_user).where(
+            project_user.c.user_id == user_to_delete_id,
+            project_user.c.project_id == project_id
+        )
+        db.session.execute(delete_query)
+        db.session.commit()
+        return jsonify(handler.answer(True,"All good", 1001)),200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2000)),500
