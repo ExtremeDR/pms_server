@@ -4,28 +4,29 @@ class Request():
     def __init__(self, db) -> None:
         self.db =db
 
-    def get_params(*params, request):
+    def get_params(self,*params, request):
         """
         Получает указанные параметры из request.args.
 
         :param params: Имена параметров, которые нужно получить.
         :return: Словарь с указанными параметрами и их значениями.
+        result = {param: value for param, value in ((param, request.args.get(param)) for param in params) if value is not None}
         """
-        result = {param: request.args.get(param) for param in params}
+        result = {param: request.args.get(param) for param in params if request.args.get(param) is not None}
         return result
 
-    def check_data(*params:str, data:dict):
+    def check_data(self,*params, data:dict) -> bool:
         """
         Проверяет наличие всех переданных параметров в словаре data.
 
         :param params: Параметры, которые нужно проверить.
         :param data: Словарь данных, в котором проверяются параметры.
-        :return: True, если все параметры есть в data, иначе False.
+        :return: False, если все параметры есть в data, иначе True.
         """
-        for param in params:
-            if param not in data:  # Проверка наличия параметра в data
-                return False
-        return True
+        for p in params:
+            if p not in data:
+                return True
+        return False
 
     def execute_dynamic_query(self, fields, filters=None, joins=None, result_mapper=None):
         """

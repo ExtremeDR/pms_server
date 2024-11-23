@@ -11,14 +11,12 @@ from datetime import datetime, timedelta
 
 
 
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280}
     db.init_app(app)
     migrate.init_app(app, db)
-
 
     with app.app_context():
         init_db()  # Инициализируем базу данных
@@ -117,8 +115,8 @@ def create_app():
     @token_required
     def delete_user_from_project():
         return API.delete_user_from_project()
-    
-    
+
+
     return app
 
 # if __name__ == '__main__':
