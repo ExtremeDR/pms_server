@@ -421,8 +421,8 @@ def change_task_status():
     return jsonify({"success": True, "code": 1001}), 200
 
 def change_project_status_and_sprints():
-    params = handler.get_params('status',"task_id", request=request)
-    if handler.check_data('status',"task_id",data = params) and not isinstance(params.get("status"), int):
+    params = handler.get_params('status',"project_id", request=request)
+    if handler.check_data('status',"project_id",data = params) and not isinstance(params.get("status"), int):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
 
     project = handler.execute_dynamic_query(
@@ -454,7 +454,7 @@ def change_project_status_and_sprints():
 
 def change_sprint_status():
     params = handler.get_params('status',"sprint_id", request=request)
-    if handler.check_data('status',"task_id",data = params) and not isinstance(params.get("status"), int):
+    if handler.check_data('status',"sprint_id",data = params) and not isinstance(params.get("status"), int):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
 
     sprint = handler.execute_dynamic_query(
