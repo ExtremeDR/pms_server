@@ -1,17 +1,13 @@
-from flask import Flask, render_template, request,jsonify
+from flask import Flask, render_template
 from .config import Config
 from .db_second import init_db,  db, migrate
 from app.api.werification_token import token_required
-import app.api.creating_api as postApi
-import app.api.deleting_api as deleteApi
-import app.api.updating_api as updateApi
 import app.api.endpoints as API
-import app.api.get_api as getApi
 from datetime import datetime, timedelta
 
 
-
 def create_app():
+    
     app = Flask(__name__)
     app.config.from_object(Config)
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280}
@@ -19,34 +15,33 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        init_db()  # Инициализируем базу данных
+        init_db()  
 
-    # Главная страница
     @app.route('/', methods=['GET', 'POST'])
     def index():
         return render_template('index.html')
 
-    @app.route('/add-user', methods=['POST'])
+    @app.route('/add-user', methods=['POST'])#
     @token_required
     def add_user():
         return API.add_user()
 
-    @app.route('/generate-code', methods=['POST'])
+    @app.route('/generate-code', methods=['POST'])#
     @token_required
     def gen():
         return API.gen()
 
-    @app.route('/add-tg-user', methods=['POST'])
+    @app.route('/add-tg-user', methods=['POST'])#
     @token_required
     def add_tg_user():
         return API.add_tg_user()
 
-    @app.route('/is-user-exists', methods=['POST'])
+    @app.route('/is-user-exists', methods=['POST'])#
     @token_required
     def is_user_exists():
         return API.is_user_exists()
 
-    @app.route('/check_telegram_id', methods=['GET'])
+    @app.route('/check_telegram_id', methods=['GET'])#
     @token_required
     def check_telegram_id():
         return API.check_telegram_id()
@@ -86,17 +81,17 @@ def create_app():
     def create_tag():
         return API.create_tag()
 
-    @app.route('/all_projects', methods=['GET'])
+    @app.route('/all_projects', methods=['GET'])#
     @token_required
     def all_projects():
         return API.get_projects_by_user_id()
 
-    @app.route('/all_tasks', methods=['GET'])
+    @app.route('/all_tasks', methods=['GET'])#
     @token_required
     def all_tasks_by_user_id_or_tg_id():
         return API.get_user_tasks()
 
-    @app.route('/sprints_by_project_id', methods=['GET'])
+    @app.route('/sprints_by_project_id', methods=['GET'])#
     @token_required
     def sprints_by_project_id():
         return API.get_sprints()
@@ -115,11 +110,5 @@ def create_app():
     @token_required
     def delete_user_from_project():
         return API.delete_user_from_project()
-
-
+    
     return app
-
-# if __name__ == '__main__':
-#     app = create_app()
-#     #app.run(debug=True)
-#     app.run(host="0.0.0.0", port=5000, debug=True)

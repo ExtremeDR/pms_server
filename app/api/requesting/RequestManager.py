@@ -10,7 +10,7 @@ class Request():
 
         :param params: Имена параметров, которые нужно получить.
         :return: Словарь с указанными параметрами и их значениями.
-        result = {param: value for param, value in ((param, request.args.get(param)) for param in params) if value is not None}
+        result = {param: request.args.get(param) for param in params if request.args.get(param) is not None}
         """
         result = {param: request.args.get(param) for param in params if request.args.get(param) is not None}
         return result

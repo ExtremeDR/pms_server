@@ -1,8 +1,6 @@
 import os
-
-path = r"D:\\Programming\\NGROK\\ngrok.exe"
-
 from dotenv import load_dotenv
+
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(dotenv_path)
@@ -42,10 +40,6 @@ types of Projects
 
 '''
 Error codes API
-
-
-#Answer ==> {'success': bool(), 'code': №}
-
 
 №:
 
