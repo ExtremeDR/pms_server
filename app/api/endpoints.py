@@ -36,7 +36,7 @@ def get_projects_by_user_id():
     params = handler.get_params('user_id', 'tg_id', request=request)
     if handler.check_data("user_id",data = params) and handler.check_data("tg_id",data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-
+    
     if params['tg_id']:  # Проверяем, что tg_id существует
         user_id = user_id_from_tg_id(params.get("tg_id"))
         if user_id:  # Если функция возвращает значение
@@ -83,10 +83,10 @@ def get_projects_by_user_id():
 
 def get_user_tasks():
     params = handler.get_params('user_id', 'sprint_id', 'tg_id', request=request)
-
+    
     if handler.check_data("user_id",data = params) and handler.check_data("tg_id",data = params) and handler.check_data("sprint_id",data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-
+    
     if params['tg_id']:  # Проверяем, что tg_id существует
         user_id = user_id_from_tg_id(params.get("tg_id"))
         if user_id:  # Если функция возвращает значение
@@ -214,7 +214,7 @@ def gen():
 
 def add_tg_user():
     data = request.json
-    if handler.check_data("user_id","uniqueCode",data = data):
+    if handler.check_data("tg_id","uniqueCode",data = data):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
     code = data.get("uniqueCode")
     tg_id = data.get("tg_id")
@@ -298,20 +298,20 @@ def create_task():
     data = request.json
     if handler.check_data("user_id","task_description","name",data = data):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-
+    
     is_have_duration =not handler.check_data("task_duration",data = data)
     is_have_tags =not handler.check_data("tags_ids",data = data)
     is_have_sprint =not handler.check_data("sprint_id",data = data)
-
+    
     if not is_have_duration and is_have_sprint:
         data['task_duration']=handler.execute_dynamic_query(
                 fields=[Sprints.end_date],
                 filters=[Sprints.id == data.get("sprint_id")]
                 ).scalars().first()
-
+        
     elif not is_have_duration and not is_have_sprint:
         return jsonify(handler.answer(False, "error, need sprint_id or task_duration", 2000)),404
-
+    
     new_task = Tasks(
         description=data.get("task_description"),
         task_name=data.get("name"),
@@ -321,17 +321,17 @@ def create_task():
         user_id=data.get("user_id"),
         sprint_id=data.get('sprint_id') if is_have_sprint else None
     )
-
+    
     if is_have_tags:
         tags = handler.execute_dynamic_query(
             fields=[Tags], filters=[Tags.id.in_(data.get("tags_ids"))]
         ).scalars().all()
-
+        
         if not tags:
             return jsonify(handler.answer(False, "error, wrong tags", 2000)),404
         for tag in tags:
             new_task.tags.append(tag)  # Добавляем тег в задачу
-
+            
     try:
         db.session.add(new_task)
         db.session.commit()
@@ -385,7 +385,7 @@ def add_user_to_project():
 def is_user_exists():
     data = request.json
     if handler.check_data("login","password",data = data):
-        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)", 'data':type(data)}, 2000)),400
     user = handler.execute_dynamic_query(fields=[Users],filters=[Users.login == data.get("login")]).scalars().first()
     return jsonify(
         handler.answer(
@@ -418,41 +418,39 @@ def change_task_status():
         db.session.commit()  # Сохраняем изменения в базе данных
     except:
         return jsonify(handler.answer(False, "error", 2000)),500
-    return jsonify(handler.answer(True,"All good", 1001)),200
+    return jsonify({"success": True, "code": 1001}), 200
 
 def change_project_status_and_sprints():
     params = handler.get_params('status',"project_id", request=request)
     if handler.check_data('status',"project_id",data = params) and not isinstance(params.get("status"), int):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
 
-    try:
-        project = handler.execute_dynamic_query(
-            fields=[Projects],
-            filters=[Projects.id == params.get('project_id')]
-            ).scalar_one_or_none()
-        if not project:
-            jsonify(handler.answer(False, "Hasnt this project_id", 2000)),404
-    except:
-        return jsonify(handler.answer(False,{'mess':"Error", 'error:':traceback.format_exc()}, 2000)),500
+    project = handler.execute_dynamic_query(
+        fields=[Projects],
+        filters=[Projects.id == params.get('project_id')]
+        ).scalar_one_or_none()
+    if not project:
+        jsonify(handler.answer(False, "Hasnt this project_id", 2000)),404
+
     try:
         project.status = params.get('status')
         sprints = handler.execute_dynamic_query(
             fields=[Sprints],
-            filters=[Sprints.project_id == params.get('project_id'), Sprints.status != 2]
+            filters=[Sprints.project_id == params.get('project_id'), Sprints.status == 1]
             ).scalars().all()
         for sprint in sprints:
-            sprint.status = params.get('status')  # Изменяем статус спринта
+            sprint.status = 3  # Изменяем статус спринта на 3
             tasks = handler.execute_dynamic_query(
-                fields=[Tasks], filters=[Tasks.sprint_id == sprint.id]
+                fields=(Tasks), filters=(Tasks.sprint_id == sprint.id)
                 ).scalars().all()
             for task in tasks:
                 if task.status != 2:  # Если статус задачи не равен 2
-                    task.status = params.get('status')  # Обновляем статус задачи
+                    task.status = 3  # Обновляем статус задачи на 3
         db.session.commit()  # Сохраняем изменения в базе данных
         return jsonify(handler.answer(True,"All good", 1001)),200
     except Exception as e:
         db.session.rollback()
-        return jsonify(handler.answer(False,{'mess':"Error", 'error:':traceback.format_exc()}, 2000)),500
+        return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2000)),500
 
 def change_sprint_status():
     params = handler.get_params('status',"sprint_id", request=request)
@@ -460,18 +458,18 @@ def change_sprint_status():
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
 
     sprint = handler.execute_dynamic_query(
-        fields=[Sprints], filters=[Sprints.id == params.get('sprint_id')]
-        ).scalars().first()
+        fields=(Sprints), filters=(Sprints.id == params.get('sprint_id'))
+        ).scalar_one_or_none()
     if not sprint:
         return jsonify(handler.answer(False,{'mess':"Dont have sprints with this id"}, 2000)),404
     try:
         sprint.status = params.get('status')
         tasks = handler.execute_dynamic_query(
-            fields=[Tasks], filters=[Tasks.sprint_id == params.get('sprint_id')]
+            fields=(Tasks), filters=(Tasks.sprint_id == params.get('sprint_id'))
             ).scalars().all()
         for task in tasks:
             if task.status != 2:  # Если статус задачи не равен 2
-                task.status = params.get('status')  # Обновляем статус задачи на 3
+                task.status = 3  # Обновляем статус задачи на 3
         db.session.commit()  # Сохраняем изменения в базе данных
         return jsonify(handler.answer(True,"All good", 1001)),200
     except Exception as e:
@@ -489,11 +487,11 @@ def delete_user_from_project():
     project_id = data.get("project_id")
 
     pr_user = handler.execute_dynamic_query(
-        fields=[project_user],
-        filters=[
+        fields=(project_user),
+        filters=(
             project_user.c.user_id == user_to_delete_id,
             project_user.c.project_id == project_id
-        ]
+        )
     ).scalars().first()
     if not pr_user:
         return jsonify(handler.answer(False,{'mess':"havent this user in project"}, 2000)),404
@@ -509,3 +507,7 @@ def delete_user_from_project():
     except Exception as e:
         db.session.rollback()
         return jsonify(handler.answer(False,{'mess':"Error", 'error:':str(e)}, 2000)),500
+
+
+def users_in_project():
+    pass

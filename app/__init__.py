@@ -96,10 +96,10 @@ def create_app():
     def sprints_by_project_id():
         return API.get_sprints()
 
-    # # @app.route('/users_in_project', methods=['GET'])
-    # # @token_required
-    # # def users_in_project():
-    # #     return API.users_in_project()
+    @app.route('/users_in_project', methods=['GET'])
+    @token_required
+    def users_in_project():
+        return API.users_in_project()
 
     @app.route('/add_user_to_project', methods=['POST'])
     @token_required
