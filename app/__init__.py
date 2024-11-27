@@ -56,17 +56,17 @@ def create_app():
     def create_task():
         return API.create_task()
 
-    @app.route('/change_task_status', methods=['PATCH', 'GET'])
+    @app.route('/change_task_status', methods=['POST', 'GET'])
     @token_required
     def change_task_status():
         return API.change_task_status()
 
-    @app.route('/change_project_status_and_sprints', methods=['PATCH', 'GET'])
+    @app.route('/change_project_status_and_sprints', methods=['POST','GET'])
     @token_required
     def change_project_status_and_sprints():
         return API.change_project_status_and_sprints()
 
-    @app.route('/change_sprint_status', methods=['PATCH', 'GET'])
+    @app.route('/change_sprint_status', methods=['POST','GET'])
     @token_required
     def change_sprint_status():
         return API.change_sprint_status()
@@ -100,6 +100,11 @@ def create_app():
     @token_required
     def users_in_project():
         return API.users_in_project()
+
+    @app.route('/get_user', methods=['GET'])
+    @token_required
+    def get_user():
+        return API.get_user()
 
     @app.route('/add_user_to_project', methods=['POST'])
     @token_required

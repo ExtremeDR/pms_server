@@ -510,4 +510,73 @@ def delete_user_from_project():
 
 
 def users_in_project():
-    pass
+    params = handler.get_params('project_id', request=request)
+    if handler.check_data('project_id',data = params):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
+    
+    fields = [
+        project_user.c.user_id.label("user_id"),
+        Users.login.label("username"), 
+        (project_user.c.user_id == Projects.head_id).label("role"),
+    ]
+    joins = [
+        (Users, Users.id == project_user.c.user_id, False),
+        (Projects, Projects.id == project_user.c.project_id, False) 
+    ]
+    filters = [
+                or_(
+            project_user.c.project_id == params['project_id'],
+            Users.user_id == params['user_id']
+        )
+    ]
+    def map_results(results):
+        return [
+            {
+                "user_id": row.user_id,
+                "username": row.username,
+                "role": row.role
+            }
+            for row in results
+        ]
+
+    try:
+        res = handler.execute_dynamic_query(fields=fields,filters=filters,joins=joins,result_mapper= map_results)
+        return jsonify(handler.answer(True, res, 1001)), 200
+    except Exception as e:
+        return jsonify(handler.answer(False, traceback.format_exc(), 2000)), 500
+    
+def get_user():
+    """
+    Получает поля login и email для пользователя по его user_id.
+                            or
+    Получает поле id пользователя по его login.
+    """
+    params = handler.get_params('user_id',"login", request=request)
+    if handler.check_data('user_id',data = params) and handler.check_data('login',data = params):
+        return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
+    
+    def map_results(results):
+        # Преобразуем результат запроса в словарь
+        result = results.fetchone()
+        if result:
+            return {
+                "id":result.user_id,
+                "login": result.login,
+                "email": result.email
+            }
+        return None
+    try:
+        user = handler.execute_dynamic_query(
+        fields=[Users.id.label("user_id"),Users.login.label("login"), Users.email.label("email")],
+        filters=[or_(
+            Users.id == params.get("user_id"),
+            Users.login == params.get("login"))],
+        result_mapper=map_results
+        )
+        if user is not None:
+            return jsonify(handler.answer(True,user,1001)),200
+        else:
+            return jsonify(handler.answer(False, "User not found", 2000)),404
+    except Exception as e:
+        return jsonify(handler.answer(False,{"Exception" : str(e)}, 2000)),500
+            
