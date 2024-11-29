@@ -36,7 +36,7 @@ def get_projects_by_user_id():
     params = handler.get_params('user_id', 'tg_id', request=request)
     if handler.check_data("user_id",data = params) and handler.check_data("tg_id",data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-    
+
     if params['tg_id']:  # Проверяем, что tg_id существует
         user_id = user_id_from_tg_id(params.get("tg_id"))
         if user_id:  # Если функция возвращает значение
@@ -83,10 +83,10 @@ def get_projects_by_user_id():
 
 def get_user_tasks():
     params = handler.get_params('user_id', 'sprint_id', 'tg_id', request=request)
-    
+
     if handler.check_data("user_id",data = params) and handler.check_data("tg_id",data = params) and handler.check_data("sprint_id",data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-    
+
     if params['tg_id']:  # Проверяем, что tg_id существует
         user_id = user_id_from_tg_id(params.get("tg_id"))
         if user_id:  # Если функция возвращает значение
@@ -298,20 +298,20 @@ def create_task():
     data = request.json
     if handler.check_data("user_id","task_description","name",data = data):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),400
-    
+
     is_have_duration =not handler.check_data("task_duration",data = data)
     is_have_tags =not handler.check_data("tags_ids",data = data)
     is_have_sprint =not handler.check_data("sprint_id",data = data)
-    
+
     if not is_have_duration and is_have_sprint:
         data['task_duration']=handler.execute_dynamic_query(
                 fields=[Sprints.end_date],
                 filters=[Sprints.id == data.get("sprint_id")]
                 ).scalars().first()
-        
+
     elif not is_have_duration and not is_have_sprint:
         return jsonify(handler.answer(False, "error, need sprint_id or task_duration", 2000)),404
-    
+
     new_task = Tasks(
         description=data.get("task_description"),
         task_name=data.get("name"),
@@ -321,17 +321,17 @@ def create_task():
         user_id=data.get("user_id"),
         sprint_id=data.get('sprint_id') if is_have_sprint else None
     )
-    
+
     if is_have_tags:
         tags = handler.execute_dynamic_query(
             fields=[Tags], filters=[Tags.id.in_(data.get("tags_ids"))]
         ).scalars().all()
-        
+
         if not tags:
             return jsonify(handler.answer(False, "error, wrong tags", 2000)),404
         for tag in tags:
             new_task.tags.append(tag)  # Добавляем тег в задачу
-            
+
     try:
         db.session.add(new_task)
         db.session.commit()
@@ -513,21 +513,18 @@ def users_in_project():
     params = handler.get_params('project_id', request=request)
     if handler.check_data('project_id',data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
-    
+
     fields = [
         project_user.c.user_id.label("user_id"),
-        Users.login.label("username"), 
+        Users.login.label("username"),
         (project_user.c.user_id == Projects.head_id).label("role"),
     ]
     joins = [
         (Users, Users.id == project_user.c.user_id, False),
-        (Projects, Projects.id == project_user.c.project_id, False) 
+        (Projects, Projects.id == project_user.c.project_id, False)
     ]
     filters = [
-                or_(
-            project_user.c.project_id == params['project_id'],
-            Users.user_id == params['user_id']
-        )
+        project_user.c.project_id == params['project_id'],
     ]
     def map_results(results):
         return [
@@ -541,20 +538,25 @@ def users_in_project():
 
     try:
         res = handler.execute_dynamic_query(fields=fields,filters=filters,joins=joins,result_mapper= map_results)
+        project = handler.execute_dynamic_query(fields = [Projects.head_id], filters = [Projects.id == params['project_id']]).scalars().first()
+        head_user = handler.execute_dynamic_query(fields = [Users.id, Users.login], filters = [Users.id == project])
+
+        user = [{"user_id" :head.id,"username":head.login, "role":True} for head in head_user]
+        res += user
         return jsonify(handler.answer(True, res, 1001)), 200
     except Exception as e:
         return jsonify(handler.answer(False, traceback.format_exc(), 2000)), 500
-    
+
 def get_user():
     """
     Получает поля login и email для пользователя по его user_id.
                             or
-    Получает поле id пользователя по его login.
+    Получает поле id и email пользователя по его login.
     """
     params = handler.get_params('user_id',"login", request=request)
     if handler.check_data('user_id',data = params) and handler.check_data('login',data = params):
         return jsonify(handler.answer(False,{'mess':"Miss parametr(s)"}, 2000)),404
-    
+
     def map_results(results):
         # Преобразуем результат запроса в словарь
         result = results.fetchone()
@@ -579,4 +581,3 @@ def get_user():
             return jsonify(handler.answer(False, "User not found", 2000)),404
     except Exception as e:
         return jsonify(handler.answer(False,{"Exception" : str(e)}, 2000)),500
-            
