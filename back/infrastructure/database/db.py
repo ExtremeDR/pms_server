@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
- 
+
 class Base(DeclarativeBase):
     pass
 

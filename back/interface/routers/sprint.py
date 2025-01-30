@@ -10,7 +10,6 @@ controller = SprintController(db)
 
 
 @router.route('/get', methods=['GET'])
-@token_required
 @swag_from({
     'tags': ['Sprints'],
     'summary': 'Получение списка спринтов для проекта',
