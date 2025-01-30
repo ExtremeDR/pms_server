@@ -200,7 +200,7 @@ def add_user_to_project():
     Добавляет пользователя в проект.
     ---
     tags:
-      - Projects
+      - Users
     parameters:
       - name: user_id
         in: body
@@ -282,7 +282,7 @@ def remove_user_from_project():
     Удаляет пользователя из проекта.
     ---
     tags:
-      - Projects
+      - Users
     parameters:
       - name: user_to_delete_id
         in: body
