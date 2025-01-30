@@ -19,50 +19,55 @@ def get_id(self, id):
     parameters:
       - name: id
         in: path
-        type: integer
         required: true
+        schema:
+          type: integer
         description: ID проекта, который нужно получить.
     responses:
       200:
         description: Данные проекта.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            data:
+        content:
+          application/json:
+            schema:
               type: object
               properties:
-                id:
-                  type: integer
-                  example: 1
-                title:
-                  type: string
-                  example: "Project Title"
-                description:
-                  type: string
-                  example: "Project Description"
-                status:
-                  type: integer
-                  example: 1
-                start_date:
-                  type: string
-                  example: "2025-01-30T12:00:00"
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    title:
+                      type: string
+                      example: "Project Title"
+                    description:
+                      type: string
+                      example: "Project Description"
+                    status:
+                      type: integer
+                      example: 1
+                    start_date:
+                      type: string
+                      example: "2025-01-30T12:00:00"
       404:
         description: Проект не найден.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Project not found"
-            code:
-              type: integer
-              example: 2001
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Project not found"
+                code:
+                  type: integer
+                  example: 2001
     """
     param = id
     project = self.service.get(param)
@@ -83,54 +88,60 @@ def get_projects_for_user():
     parameters:
       - name: user_id
         in: query
-        type: integer
         required: true
+        schema:
+          type: integer
         description: ID пользователя.
       - name: tg_id
         in: query
-        type: integer
         required: false
+        schema:
+          type: integer
         description: Telegram ID пользователя.
     responses:
       200:
         description: Список проектов пользователя.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            data:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  title:
-                    type: string
-                    example: "Project Title"
-                  description:
-                    type: string
-                    example: "Project Description"
-                  status:
-                    type: integer
-                    example: 1
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      title:
+                        type: string
+                        example: "Project Title"
+                      description:
+                        type: string
+                        example: "Project Description"
+                      status:
+                        type: integer
+                        example: 1
       400:
         description: Неверный запрос.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Missing parameters"
-            code:
-              type: integer
-              example: 2000
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Missing parameters"
+                code:
+                  type: integer
+                  example: 2000
     """
     params = get_params('user_id', 'tg_id', request=request)
     if check_data("user_id", data=params) and check_data("tg_id", data=params):
@@ -161,52 +172,43 @@ def get_head_id(self):
     parameters:
       - name: project_id
         in: query
-        type: integer
         required: true
+        schema:
+          type: integer
         description: ID проекта для получения главы проекта.
     responses:
       200:
         description: ID главы проекта успешно получен.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            head_id:
-              type: integer
-              example: 1
-            code:
-              type: integer
-              example: 1001
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                head_id:
+                  type: integer
+                  example: 1
+                code:
+                  type: integer
+                  example: 1001
       404:
         description: Проект не найден.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Project not found"
-            code:
-              type: integer
-              example: 2000
-      500:
-        description: Ошибка сервера.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Error"
-            code:
-              type: integer
-              example: 2000
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Project not found"
+                code:
+                  type: integer
+                  example: 2000
     """
     project_id = request.args.get('project_id')
 
@@ -224,65 +226,39 @@ def post(self):
     ---
     tags:
       - Projects
-    parameters:
-      - name: project_title
-        in: body
-        type: string
-        required: true
-        description: Название проекта.
-      - name: project_description
-        in: body
-        type: string
-        required: true
-        description: Описание проекта.
-      - name: user_id
-        in: body
-        type: integer
-        required: true
-        description: ID пользователя, который будет главой проекта.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              project_title:
+                type: string
+                example: "Project Title"
+              project_description:
+                type: string
+                example: "Project Description"
+              user_id:
+                type: integer
+                example: 1
     responses:
       200:
         description: Проект успешно создан.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: true
-            message:
-              type: string
-              example: "All good"
-            code:
-              type: integer
-              example: 1001
-      400:
-        description: Ошибка в параметрах запроса.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Miss parameter(s)"
-            code:
-              type: integer
-              example: 2000
-      500:
-        description: Ошибка сервера.
-        schema:
-          type: object
-          properties:
-            success:
-              type: boolean
-              example: false
-            message:
-              type: string
-              example: "Error"
-            code:
-              type: integer
-              example: 2000
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: "All good"
+                code:
+                  type: integer
+                  example: 1001
     """
     data = request.json
     response, status_code = controller.create_project(data)
@@ -292,24 +268,33 @@ def post(self):
 @token_required
 def set_status(self):
     """
-    Изменение статуса проекта и его спринтов.
-    ---
-    tags:
-      - Projects
-    parameters:
-      - name: project_id
-        in: body
-        type: integer
-        required: true
-        description: ID проекта, для которого нужно изменить статус.
-      - name: status
-        in: body
-        type: integer
-        required: true
-        description: Новый статус проекта.
-    responses:
-      200:
-        description: Статус проекта и спринтов успешно обновлен.
+Изменение статуса проекта и его спринтов.
+---
+tags:
+  - Projects
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          project_id:
+            type: integer
+            description: ID проекта, для которого нужно изменить статус.
+            example: 123
+          status:
+            type: integer
+            description: Новый статус проекта.
+            example: 1
+        required:
+          - project_id
+          - status
+responses:
+  200:
+    description: Статус проекта и спринтов успешно обновлен.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -322,8 +307,10 @@ def set_status(self):
             code:
               type: integer
               example: 1001
-      400:
-        description: Ошибка параметров запроса.
+  400:
+    description: Ошибка параметров запроса.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -336,8 +323,10 @@ def set_status(self):
             code:
               type: integer
               example: 2000
-      404:
-        description: Проект не найден.
+  404:
+    description: Проект не найден.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -350,8 +339,10 @@ def set_status(self):
             code:
               type: integer
               example: 2000
-      500:
-        description: Ошибка сервера.
+  500:
+    description: Ошибка сервера.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -364,7 +355,8 @@ def set_status(self):
             code:
               type: integer
               example: 2000
-    """
+"""
+
     data = request.json
     status = data.get('status')
     project_id = data.get('project_id')
@@ -379,19 +371,28 @@ def set_status(self):
 @token_required
 def get_users_in_project(self):
     """
-    Получение списка пользователей в проекте, включая главу проекта.
-    ---
-    tags:
-      - Projects
-    parameters:
-      - name: project_id
-        in: body
-        type: integer
-        required: true
-        description: ID проекта, для которого нужно получить пользователей.
-    responses:
-      200:
-        description: Список пользователей проекта успешно получен.
+Получение списка пользователей в проекте, включая главу проекта.
+---
+tags:
+  - Projects
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          project_id:
+            type: integer
+            description: ID проекта, для которого нужно получить пользователей.
+            example: 123
+        required:
+          - project_id
+responses:
+  200:
+    description: Список пользователей проекта успешно получен.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -419,8 +420,10 @@ def get_users_in_project(self):
             code:
               type: integer
               example: 1001
-      404:
-        description: Oтсутствует project_id или проект не найден.
+  404:
+    description: Отсутствует project_id или проект не найден.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -433,8 +436,10 @@ def get_users_in_project(self):
             code:
               type: integer
               example: 2000
-      500:
-        description: Ошибка сервера.
+  500:
+    description: Ошибка сервера.
+    content:
+      application/json:
         schema:
           type: object
           properties:
@@ -447,7 +452,7 @@ def get_users_in_project(self):
             code:
               type: integer
               example: 2000
-    """
+"""
     data = request.json
     project_id = data.get('project_id')
 
