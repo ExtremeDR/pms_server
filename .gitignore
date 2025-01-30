@@ -2,3 +2,6 @@
 /.env
 /migrations
 /testing.py
+fake_main.py
+/venv
+/app
