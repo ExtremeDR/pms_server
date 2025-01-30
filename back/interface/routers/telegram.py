@@ -4,8 +4,10 @@ from back.services.validation import check_data, get_params, obj_to_dict
 from back.services.controller.tg_service import TelegramUserController
 from back.services.werification_token import token_required
 
+
+
 router = Blueprint('tg', __name__, url_prefix='/tg')
-controller = TelegramUserController()
+controller = TelegramUserController(db)
 
 @router.route('/gen-code', methods=['POST'])
 @token_required

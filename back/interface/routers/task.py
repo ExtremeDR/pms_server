@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request
-from back.services.validation import check_data, get_params, obj_to_dict
 from back.services.controller.task_controller import TaskController
 from back.services.werification_token import token_required
+from back.infrastructure.database import db
+
 
 router = Blueprint('task', __name__, url_prefix='/task')
-controller = TaskController()
+controller = TaskController(db)
 
 @router.route('', methods=['POST'])
 @token_required
@@ -71,7 +72,7 @@ def get_user_tasks_route(self):
               type: integer
               example: 1001
       404:
-        description: Ошибка: не найден tg_id или пользователь.
+        description: Не найден tg_id или пользователь.
         schema:
           type: object
           properties:

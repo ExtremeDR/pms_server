@@ -1,14 +1,15 @@
 from flask import Blueprint, jsonify, request
 from flasgger import swag_from
-from back.services.validation import check_data, get_params, obj_to_dict
 from back.services.controller.sprint_controller import SprintController
 from back.services.werification_token import token_required
+from back.infrastructure.database import db
+
 
 router = Blueprint('sprint', __name__, url_prefix='/sprint')
-controller = SprintController()
+controller = SprintController(db)
 
 
-@router.route('/sprints', methods=['GET'])
+@router.route('/get', methods=['GET'])
 @token_required
 @swag_from({
     'tags': ['Sprints'],
@@ -53,7 +54,7 @@ controller = SprintController()
         }
     }
 })
-def get_sprints_route(self):
+def get_sprints_route():
     """
     Получение списка спринтов для проекта по project_id.
     """
@@ -67,7 +68,7 @@ def get_sprints_route(self):
     return jsonify(response), status_code
 
 
-@router.route('/sprints', methods=['POST'])
+@router.route('/post', methods=['POST'])
 @token_required
 @swag_from({
     'tags': ['Sprints'],
@@ -108,7 +109,7 @@ def get_sprints_route(self):
         }
     }
 })
-def create_sprint_route(self):
+def create_sprint_route():
     """
     Создание нового спринта.
     """
@@ -123,7 +124,7 @@ def create_sprint_route(self):
     return jsonify(response), status_code
 
 
-@router.route('/sprints/status', methods=['PUT'])
+@router.route('/status', methods=['PUT'])
 @token_required
 @swag_from({
     'tags': ['Sprints'],
@@ -167,7 +168,7 @@ def create_sprint_route(self):
         }
     }
 })
-def update_sprint_status_route(self):
+def update_sprint_status_route():
     """
     Обновление статуса спринта.
     """

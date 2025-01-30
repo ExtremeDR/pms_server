@@ -2,10 +2,12 @@ from flask import Blueprint, jsonify, request
 from back.services.validation import check_data, get_params, obj_to_dict
 from back.services.controller.project_controller import ProjectController
 from back.services.werification_token import token_required
+from back.infrastructure.database import db
+
 
 router = Blueprint('project', __name__, url_prefix='/project')
-controller = ProjectController()
-    
+controller = ProjectController(db)
+
 @router.route('/get/<id>', methods=['GET'])
 @token_required
 def get_id(self, id):
@@ -64,10 +66,10 @@ def get_id(self, id):
     """
     param = id
     project = self.service.get(param)
-    
+
     # Преобразуем объект проекта в словарь
     data = obj_to_dict(project)
-    
+
     return jsonify(data), 200
 
 @router.route('/get-projects-for-user', methods=['GET'])
@@ -207,7 +209,7 @@ def get_head_id(self):
               example: 2000
     """
     project_id = request.args.get('project_id')
-    
+
     if not project_id:
         return jsonify({'success': False, 'message': "Missing project_id", 'code': 2000}), 400
 
@@ -418,7 +420,7 @@ def get_users_in_project(self):
               type: integer
               example: 1001
       404:
-        description: Ошибка: отсутствует project_id или проект не найден.
+        description: Oтсутствует project_id или проект не найден.
         schema:
           type: object
           properties:
@@ -454,4 +456,3 @@ def get_users_in_project(self):
 
     response, status_code = self.controller.get_users_in_project(project_id)
     return jsonify(response), status_code
-    

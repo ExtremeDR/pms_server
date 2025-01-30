@@ -22,15 +22,15 @@ def check_data(self,*params, data:dict) -> bool:
             return True
     return False
 
-from sqlalchemy.orm import inspect
+from sqlalchemy import inspect
 
 def obj_to_dict(obj, keys=None):
     # Получаем все доступные ключи (колонки)
     all_columns = {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
-    
+
     # Если список ключей не передан, возвращаем все колонки
     if keys is None:
         return all_columns
-    
+
     # Создаем словарь только с указанными ключами
     return {key: all_columns[key] for key in keys if key in all_columns}
